@@ -1,7 +1,5 @@
 from django.db import models
-from django.db.models.base import Model
 from django.utils.datetime_safe import datetime
-from moneyfield import MoneyField
 
 
 class Company(models.Model):
@@ -12,6 +10,7 @@ class Company(models.Model):
     email = models.EmailField()
     payements = models.ManyToOneRel()
 
+# TODO: consider wrapping SHARE_XXX in class for better namespacing
 SHARE_ALL = 'SA'
 SHARE_NONE = 'SN'
 SHARE_RESTRICTED = 'SR'
@@ -25,14 +24,17 @@ SHARING_POLICY_SEQ = (
 
 class Payment(models.Model):
     """ Represent money transaction """
-    buyer = models.ForeignKey(Company)
-    seller = models.ForeignKey(Company)
-    amount = MoneyField(decimal_places=2, max_digits=20, blank=True)
+    buyer = models.ForeignKey(Company, blank=True)
+    seller = models.ForeignKey(Company, blank=True)
+#   TODO: See https://piazza.com/class/hnyk6a1pnyd6dd
+#   amount = MoneyField(max_digits=10, decimal_places=2, default_currency='USD')
     dueDate = models.DateField()
     orderdate = models.DateField(default=datetime.now(), blank=True)
     input_date = models.DateTimeField(auto_now_add=True)
+    input_user = models.ForeignKey(Company)
     restrict_share = models.BooleanField(default=False)
     verfied = models.BooleanField(default=False)
+#   TODO: verified_by
 
 
 class Preferences(models.Model):
@@ -43,7 +45,7 @@ class Preferences(models.Model):
         choices=SHARING_POLICY_SEQ,
         default=SHARE_RESTRICTED,
     )
-    
+    #alerts
 '''
 
 
