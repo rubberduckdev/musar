@@ -4,14 +4,16 @@ from django.utils.datetime_safe import datetime
 
 class Company(models.Model):
     """ Company profile """
-    id = models.CharField(primary_key=True, max_length=200, unique=True)
-    comapny_name = models.CharField(max_length=200, unique=True)
-    company_url = models.URLField()
+    cid = models.CharField(
+        primary_key=True,
+        max_length=200, unique=True
+    )
+    name = models.CharField(max_length=200, unique=True)
+    url = models.URLField()
     email = models.EmailField()
-    payements = models.ManyToOneRel()
 
     def __unicode__(self):
-        return self.comapny_name
+        return self.name
 
 # TODO: consider wrapping SHARE_XXX in class for better namespacing
 SHARE_ALL = 'SA'
@@ -27,8 +29,8 @@ SHARING_POLICY_SEQ = (
 
 class Payment(models.Model):
     """ Represent money transaction """
-    buyer = models.ForeignKey(Company, related_name='buyer', blank=True)
-    seller = models.ForeignKey(Company, related_name='seller', blank=True)
+    buyer = models.ForeignKey(Company, related_name='out_payments', blank=True)
+    seller = models.ForeignKey(Company, related_name='in_payments', blank=True)
 #   TODO: See https://piazza.com/class/hnyk6a1pnyd6dd
 #   amount = MoneyField(max_digits=10, decimal_places=2, default_currency='USD')
     dueDate = models.DateField()
@@ -40,6 +42,7 @@ class Payment(models.Model):
 #   TODO: verified_by
 
 
+'''
 class Preferences(models.Model):
     """ Stores the company's prefrences for sharing data and for alerts"""
     company = models.ForeignKey(Company)
@@ -50,10 +53,11 @@ class Preferences(models.Model):
     )
     #alerts
 '''
+'''
 
 
 Preferences
-Company.id 
+Company.id
 SharingPolicy.id
 Alerts
 
