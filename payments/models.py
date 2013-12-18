@@ -10,6 +10,9 @@ class Company(models.Model):
     email = models.EmailField()
     payements = models.ManyToOneRel()
 
+    def __unicode__(self):
+        return self.comapny_name
+
 # TODO: consider wrapping SHARE_XXX in class for better namespacing
 SHARE_ALL = 'SA'
 SHARE_NONE = 'SN'
@@ -24,8 +27,8 @@ SHARING_POLICY_SEQ = (
 
 class Payment(models.Model):
     """ Represent money transaction """
-    buyer = models.ForeignKey(Company, blank=True)
-    seller = models.ForeignKey(Company, blank=True)
+    buyer = models.ForeignKey(Company, related_name='buyer', blank=True)
+    seller = models.ForeignKey(Company, related_name='seller', blank=True)
 #   TODO: See https://piazza.com/class/hnyk6a1pnyd6dd
 #   amount = MoneyField(max_digits=10, decimal_places=2, default_currency='USD')
     dueDate = models.DateField()
