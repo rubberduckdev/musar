@@ -79,3 +79,4 @@ coverage.xml
 docs/_build/
 .pydevproject
 .gitignore
+db.sqlite3
