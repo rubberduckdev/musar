@@ -46,7 +46,7 @@ class CompanyCreateTest(TestCase):
             dueDate=datetime.now(),
             orderdate=datetime.now(),
             input_user=company1,
-            restrict_share=False,
+#             restrict_share=False,
         )
         self.assertEqual(
             1, Payment.objects.count())
