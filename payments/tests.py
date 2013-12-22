@@ -29,9 +29,6 @@ class CompanyTest(TestCase):
         self.assertEqual(
             2, Company.objects.count()
         )
-        self.assertEqual(
-            2, Preferences.objects.count()
-        )
 
         """ Test retrive companies by name"""
         self.assertEqual(
@@ -49,13 +46,13 @@ class CompanyTest(TestCase):
 class PaymentTest(TestCase):
 
     def setUp(self):
-        self.company_1 = Company.objects.create(
+        self.company1 = Company.objects.create(
             cid='sc1',
             name="FSF",
             url="http://www.fsf.org/",
             email="info@fsf.org",
         )
-        self.company_2 = Company.objects.create(
+        self.company2 = Company.objects.create(
             cid='sc2',
             name="Yossi",
             url="http://www.yossi.co.il/",
