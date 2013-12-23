@@ -38,5 +38,6 @@ urlpatterns = patterns('',
         'django.contrib.auth.views.logout',
         {'next_page': reverse_lazy('index')}, name="logout"),
 
-    #url(r'^admin/$', include(admin.site.urls)),
+    url(r'^admin/', include(admin.site.urls)),
+
 )

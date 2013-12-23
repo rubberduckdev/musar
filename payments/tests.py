@@ -1,7 +1,7 @@
 from django.test import TestCase
 from datetime import datetime
 from payments.models import (
-    Company, Payment, Preferences,
+    Company, Payment, Settings,
 )
 
 
