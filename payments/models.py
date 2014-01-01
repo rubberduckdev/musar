@@ -40,6 +40,7 @@ class Company(models.Model):
     def __unicode__(self):
         return self.name
 
+
 # FIXME: check why http://localhost:8000/admin/payments/partner/ fails
 class Partner(models.Model):
     """ Company profile """

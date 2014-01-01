@@ -37,9 +37,11 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'payments',
+    'debug_toolbar',
 )
 
 MIDDLEWARE_CLASSES = (
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -85,6 +87,7 @@ USE_L10N = True
 
 USE_TZ = True
 
+INTERNAL_IPS = ('127.0.0.1',)
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
@@ -92,4 +95,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 LOGIN_URL = "/login/"
-LOGIN_REDIRECT_URL = "/"
+# LOGIN_REDIRECT_URL = "home"
+
+TEMPLATE_STRING_IF_INVALID = "Opps"

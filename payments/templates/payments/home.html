@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>HOME of {{username}}</h1>
+<h1>HOME of {{user.username}}</h1>
+<h2>My Companies:</h2>
+    <ul>
+        {% for company in my_companies %}
+            <li>{{ company.name }}</li>
+        {% endfor %}
+    </ul>
 {% endblock %}
