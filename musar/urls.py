@@ -2,7 +2,10 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse_lazy
-from payments.views import index, HomeView, statistics, settings, register, search, after_login
+from django.views.generic.base import TemplateView
+from payments.views import index, HomeView, statistics, settings, register, \
+    search, after_login
+
 
 admin.autodiscover()
 
@@ -22,6 +25,9 @@ urlpatterns = patterns('',
     url(r'^user/(?P<username>\w+)/$',
         HomeView.as_view(), name='home'),
 
+    url(r'^user/(?P<username>\w+)/payments/$',
+        login_required(TemplateView.as_view(template_name="payments/payments.html")),
+        name='payments'),
 
     url(r'^user/(?P<username>\w+)/statistics/$',
         statistics, name='statistics'),

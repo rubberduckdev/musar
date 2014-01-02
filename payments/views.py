@@ -32,6 +32,9 @@ class HomeView(ListView):
     context_object_name = 'my_companies'
     Model = Company
  
+    def get_payments(company_name):
+        return Company.objects.filter(company__name=company_name)
+ 
     def get_queryset(self):
         return self.request.user.companies.all()
 

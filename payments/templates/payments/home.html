@@ -1,11 +1,38 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>HOME of {{user.username}}</h1>
+<div class="panel panel-info" dir="rtl">
+    <div class="panel-heading" dir="rtl">
+        <h3 class="panel-title">תשלומים קרובים</h3>
+    </div>
+    <div class="panel-body">
+        <!-- Table -->
+        <table class="table" dir="rtl" align="right">
+        <thead>  
+          <tr>  
+            <th>שם הלקוח</th>  
+            <th>תאריך אחרון לתשלום</th>  
+            <th>סכום</th>  
+            <th>דירוג מוסר תשלומים</th>  
+          </tr>  
+        </thead>  
+        <tbody>  
+          <tr>  
+            <td>משרד האוצר</td>  
+            <td>4/1/2014</td>  
+            <td>300</td>  
+            <td>ללא</td>  
+          </tr>  
+        </tbody>  
+        </table>
+    </div>
+</div>
 <h2>My Companies:</h2>
-    <ul>
-        {% for company in my_companies %}
-            <li>{{ company.name }}</li>
-        {% endfor %}
-    </ul>
+<ul>
+    {% for company in my_companies %}
+    <li>
+        {{ company.name }}
+    </li>
+    {% endfor %}
+</ul>
 {% endblock %}
