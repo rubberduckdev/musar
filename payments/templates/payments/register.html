@@ -1,5 +1,20 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Register</h1>
-{% endblock %}
+<div class="container">
+    <form class="form-signin" method="post">
+        <div class=col-xs-4>
+            <h2 class="form-signin-heading" dir="rtl">משתמש חדש?</h2>
+            <input type="text" id="id_username_new" name="username" class="form-control" placeholder="שם משתמש"  dir="rtl" required autofocus>
+            <br />
+            <input type="email" id="id_email_new" name="email" class="form-control" placeholder="אימייל" dir="rtl" required>
+            <br />
+            <input type="password" id="id_password_new" name="password" class="form-control" placeholder="סיסמה" dir="rtl" required>
+            <br />
+            <input type="password" id="id_password_new_again" name="password" class="form-control" placeholder="חזור על הסיסמה" dir="rtl" required>
+            <br/>
+            <button class="btn btn-primary btn-lg active" type="submit">צור חשבון</button>
+        </div>
+    </form>
+</div>
+{% endblock content %}

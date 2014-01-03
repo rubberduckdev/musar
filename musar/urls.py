@@ -35,6 +35,10 @@ urlpatterns = patterns('',
     url(r'^user/(?P<username>\w+)/settings/$',
         login_required(settings), name='settings'),
 
+    url(r'^user/new/$',
+        TemplateView.as_view(template_name="payments/new_account.html"),
+        name='new_account'),
+
     url(r'^login/$',
         'django.contrib.auth.views.login',
         {'template_name': 'login.html'},
