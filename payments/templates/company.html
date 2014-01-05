@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="panel panel-warning" dir="rtl">
+    <div class="panel-heading" dir="rtl">
+        <h3 class="panel-title">תשלומים מאחרים</h3>
+    </div>
+    <div class="panel-body">
+        <!-- Table -->
+        <table class="table" dir="rtl" align="right">
+        <thead>  
+          <tr>  
+            <th>שם הלקוח</th>  
+            <th>תאריך אחרון לתשלום</th>  
+            <th>סכום</th>  
+            <th>איחור בימים</th> 
+            <th>תזכורת</th> 
+            <th>פעולה</th>
+          </tr>  
+        </thead>  
+        <tbody>  
+          <tr>  
+            <td>משרד החינוך</td>  
+            <td>1/1/2014</td>  
+            <td>20000</td>  
+            <td>2</td>
+            <td> לפני 3 ימים</td>
+            <td><button class="btn" type="submit">שלח תזכורת</button></td>
+          </tr>  
+          <tr>  
+            <td>עיריית אילת</td>  
+            <td>30/12/2013</td>  
+            <td>13000</td>  
+            <td>5</td>  
+            <td> לפני 7 ימים</td>
+            <td><button class="btn" type="submit">שלח תזכורת</button></td>
+          </tr>  
+        </tbody>  
+        </table>
+    </div>
+</div>
+
+<div class="panel panel-info" dir="rtl">
+    <div class="panel-heading" dir="rtl">
+        <h3 class="panel-title">תשלומים קרובים</h3>
+    </div>
+    <div class="panel-body">
+        <!-- Table -->
+        <table class="table" dir="rtl" align="right">
+        <thead>  
+          <tr>  
+            <th>שם הלקוח</th>  
+            <th>תאריך אחרון לתשלום</th>  
+            <th>סכום</th>  
+            <th>דירוג מוסר תשלומים</th> 
+            <th>תזכורת</th> 
+            <th>פעולה</th>
+          </tr>  
+        </thead>  
+        <tbody>  
+          <tr>  
+            <td>משרד האוצר</td>  
+            <td>4/1/2014</td>  
+            <td>300</td>  
+            <td>אין נתונים</td>  
+            <td> לפני 7 ימים</td>
+            <td><button class="btn" type="submit">שלח תזכורת</button></td>
+          </tr>  
+          <tr>  
+            <td>משרד החינוך</td>  
+            <td>5/1/2014</td>  
+            <td>15000</td>  
+            <td>נמוך</td>  
+            <td>לא</td>
+            <td><button class="btn" type="submit">שלח תזכורת</button></td>
+          </tr>  
+        </tbody>  
+        </table>
+    </div>
+</div>
+
+{% endblock %}
