@@ -80,28 +80,41 @@ class PaymentDirection(object):
 
 class Payment(models.Model):
     """Represent private money transaction"""
+
     partner = models.ForeignKey(
         Partner,
         related_name='partner_payments',
         help_text='The other side of the transaction',
     )
+
     owner = models.ForeignKey(
         Partner,
         related_name='my_payments',
         help_text='The company associated with this transaction',
     )
+
     created_at = models.DateTimeField(auto_now_add=True)
+
     created_by = models.ForeignKey(User)
+
     direction = models.IntegerField(choices=PaymentDirection.choices)
+
     amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         null=True,
         blank=True,
     )
+
     title = models.CharField(max_length=400)
+
     due_date = models.DateField()
+
     order_date = models.DateField(default=datetime.now, null=True, blank=True)
+
+    # Date at which payment was finally paid
+    payment_date = models.DateField(null=True, blank=True)
+
     shared_with = models.IntegerField(
         choices=ShareOption.choices,
         default=ShareOption.NONE,
