@@ -25,7 +25,8 @@ class Company(models.Model):
         help_text="Company's ID",
     )
 
-    users = models.ManyToManyField(User,
+    users = models.ManyToManyField(
+        User,
         related_name='companies',
         help_text='list of users with permission to edit the company profile',
     )
@@ -33,9 +34,11 @@ class Company(models.Model):
     name = models.CharField(max_length=200, unique=True)
     url = models.URLField(null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
-    shared_with = models.IntegerField(choices=ShareOption.choices,
+    shared_with = models.IntegerField(
+        choices=ShareOption.choices,
         default=ShareOption.NONE,
-        help_text='company\'s sharing data policy')
+        help_text='company\'s sharing data policy',
+    )
 
     def __unicode__(self):
         return self.name
@@ -54,46 +57,55 @@ class Partner(models.Model):
 
     email = models.EmailField(null=True, blank=True)
 
-    shared_with = models.IntegerField(choices=ShareOption.choices,
+    shared_with = models.IntegerField(
+        choices=ShareOption.choices,
         default=ShareOption.NONE,
-        help_text='Stores the company\'s prefrences for sharing data')
+        help_text='Stores the company\'s prefrences for sharing data',
+    )
 
     def __unicode__(self):
         return self.name
 
 
-class PaymentType(object):
+class PaymentDirection(object):
     """indication if this is payment to or payment by"""
     IN = 1
     OUT = 2
 
     choices = (
-               (IN, 'In'),
-               (OUT, 'Out'),
-               )
+        (IN, 'In'),
+        (OUT, 'Out'),
+    )
 
 
 class Payment(models.Model):
     """Represent private money transaction"""
-    partner = models.ForeignKey(Partner,
+    partner = models.ForeignKey(
+        Partner,
         related_name='partner_payments',
         help_text='The other side of the transaction',
     )
-    owner = models.ForeignKey(Partner,
+    owner = models.ForeignKey(
+        Partner,
         related_name='my_payments',
         help_text='The company associated with this transaction',
     )
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User)
-    type = models.IntegerField(choices=PaymentType.choices)
-    amount = models.DecimalField(max_digits=10, decimal_places=2, null=True,
-                                 blank=True)
+    direction = models.IntegerField(choices=PaymentDirection.choices)
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
     title = models.CharField(max_length=400)
     due_date = models.DateField()
     order_date = models.DateField(default=datetime.now, null=True, blank=True)
-    shared_with = models.IntegerField(choices=ShareOption.choices,
-        default=ShareOption.NONE)
+    shared_with = models.IntegerField(
+        choices=ShareOption.choices,
+        default=ShareOption.NONE,
+    )
 
     def __unicode__(self):
         return self.title
-
