@@ -1,4 +1,5 @@
 {% load static %}
+{% load payments_extras %}
 <!DOCTYPE html>
 <!--[if IE 7]>
 <html class="ie ie7" dir="rtl" lang="he-IL">
@@ -56,19 +57,19 @@
                 <div class="collapse navbar-collapse">
                     <ul class="nav navbar-nav navbar-right">
                          {% if user.id %}
-                        <li class="active">
+                        <li class="{% active_page request 'home' %}">
                             <a href="{% url 'home' user.username %}">בית</a>
                         </li>
-                        <li>
+                        <li class="{% active_page request 'payments' %}">
                             <a href="{% url 'payments' user.username %}"> התשלומים שלי</a>
                         </li>
-                        <li>
+                        <li class="{% active_page request 'statistics' %}">
                             <a href="{% url 'add_payments' user.username %}">הוסף תשלום</a>
                         </li>
                         <li>
                             <a href="{% url 'statistics' user.username %}">הסטטיסטיקות שלי</a>
                         </li>
-                        <li>
+                        <li class="{% active_page request 'settings' %}">
                             <a href="{% url 'settings' user.username %}">ההגדרות שלי</a>
                         </li>
                          {%endif%}
@@ -80,7 +81,7 @@
                                 <button type="submit" class="btn btn-default">חפש<span class="glyphicon glyphicon-search"></span></button>
                             </form>
                         </li>
-                        <li>
+                        <li class="{% active_page request 'search' %}">
                             <a href="{% url 'company' %}">חיפוש מתקדם</a>
                         </li>
                     </ul>
