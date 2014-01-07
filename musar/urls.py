@@ -54,6 +54,10 @@ urlpatterns = patterns('',
         TemplateView.as_view(template_name="company.html"),
         name='company'),
 
+    url(r'^user/(?P<username>\w+)/add_payments/$',
+        login_required(TemplateView.as_view(template_name="payments/add_payments.html")),
+        name='add_payments'),
+
     url(r'^admin/', include(admin.site.urls)),
 
 
