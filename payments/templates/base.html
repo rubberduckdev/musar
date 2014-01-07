@@ -63,10 +63,10 @@
                         <li class="{% active_page request 'payments' %}">
                             <a href="{% url 'payments' user.username %}"> התשלומים שלי</a>
                         </li>
-                        <li class="{% active_page request 'statistics' %}">
+                        <li class="{% active_page request 'add_payments' %}">
                             <a href="{% url 'add_payments' user.username %}">הוסף תשלום</a>
                         </li>
-                        <li>
+                        <li class="{% active_page request 'statistics' %}">
                             <a href="{% url 'statistics' user.username %}">הסטטיסטיקות שלי</a>
                         </li>
                         <li class="{% active_page request 'settings' %}">
