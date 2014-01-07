@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block header %}
+<!--<link rel="stylesheet" href="{% static 'chosen/docsupport/style.css' %}">-->
+<link rel="stylesheet" href="{% static 'chosen/docsupport/prism.css' %}">
+<link href="{% static 'chosen/chosen.css' %}" rel="stylesheet">
+<style type="text/css" media="all">
+    /* fix rtl for demo */
+    .chosen-rtl .chosen-drop {
+        left: -9000px;
+    }
+</style>
+{% endblock header %}
+
+{% block content %}
+<div id="container">
+    <div id="content">
+        <div class="row">
+            <select data-placeholder="בחר תאגיד" class="chosen-select chosen-rtl" style="width:350px;" tabindex="1">
+                <option value=""></option>
+                <option value="aa">משרד האוצר</option>
+                <option value="bb">משרד הפנים</option>
+                <option value="cc">משרד החינוך</option>
+                <option value="dd">משרד הדתות</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
