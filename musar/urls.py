@@ -51,7 +51,7 @@ urlpatterns = patterns('',
         {'next_page': reverse_lazy('index')}, name="logout"),
 
     url(r'^company/$',
-        TemplateView.as_view(template_name="company.html"),
+        TemplateView.as_view(template_name="payments/company.html"),
         name='company'),
 
     url(r'^user/(?P<username>\w+)/add_payments/$',
