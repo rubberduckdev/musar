@@ -20,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SECRET_KEY = 'v8g!bqfl3swprhwjg5^=+_j4ckn8m)a-ynfwlgrknz85szaomf'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 TEMPLATE_DEBUG = True
 
@@ -98,3 +98,15 @@ LOGIN_URL = "/login/"
 # LOGIN_REDIRECT_URL = "home"
 
 TEMPLATE_STRING_IF_INVALID = "Opps"
+
+
+# Overide global with local settings
+# TODO FIXME Is it right to just print the error and continue as nothing happened here?
+try:
+    import local_settings
+    try:
+        DATABASES = local_settings.DATABASES
+    except NameError as e:
+        print(e)
+except ImportError as e:
+    print e
