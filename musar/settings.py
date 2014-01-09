@@ -98,3 +98,15 @@ LOGIN_URL = "/login/"
 # LOGIN_REDIRECT_URL = "home"
 
 TEMPLATE_STRING_IF_INVALID = "Opps"
+
+
+# Overide global with local settings
+# TODO FIXME Is it right to just print the error and continue as nothing happened here?
+try:
+    import local_settings
+    try:
+        DATABASES = local_settings.DATABASES
+    except NameError as e:
+        print(e)
+except ImportError as e:
+    print e
