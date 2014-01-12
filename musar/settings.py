@@ -110,6 +110,7 @@ try:
     import local_settings
     try:
         DATABASES = local_settings.DATABASES
+        DEBUG = local_settings.DEBUG
     except NameError as e:
         print(e)
 except ImportError as e:
