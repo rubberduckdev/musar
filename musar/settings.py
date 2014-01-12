@@ -111,6 +111,10 @@ try:
     try:
         DATABASES = local_settings.DATABASES
         DEBUG = local_settings.DEBUG
+        SECRET_KEY = local_settings.SECRET_KEY
+        ALLOWED_HOSTS = local_settings.ALLOWED_HOSTS
+        STATIC_ROOT = local_settings.STATIC_ROOT
+        STATICFILES_DIRS = local_settings.STATICFILES_DIRS
     except NameError as e:
         print(e)
 except ImportError as e:
