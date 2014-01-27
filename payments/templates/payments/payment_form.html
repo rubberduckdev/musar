@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load floppyforms %}
+<!DOCTYPE html>
+{% form payment_form using "floppyforms/layouts/table.html" %}
+
+{% block content %}
+<form method="post">
+  {% csrf_token %}
+      {{ form.as_p }}
+  <input id="save_contact" type="submit" class="btn btn-info" value="save">
+  <input type="hidden" id="owner_id" value="{{ user.id }}"/>
+</form>
+{% endblock content %}

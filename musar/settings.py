@@ -38,6 +38,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'payments',
     'debug_toolbar',
+    'django_tables2',
+    'floppyforms',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -107,15 +109,7 @@ TEMPLATE_STRING_IF_INVALID = "Opps"
 # Overide global with local settings
 # TODO FIXME Is it right to just print the error and continue as nothing happened here?
 try:
-    import local_settings
-    try:
-        DATABASES = local_settings.DATABASES
-        DEBUG = local_settings.DEBUG
-        SECRET_KEY = local_settings.SECRET_KEY
-        ALLOWED_HOSTS = local_settings.ALLOWED_HOSTS
-        STATIC_ROOT = local_settings.STATIC_ROOT
-        STATICFILES_DIRS = local_settings.STATICFILES_DIRS
-    except NameError as e:
-        print(e)
+    from local_settings import *
+
 except ImportError as e:
     print e
