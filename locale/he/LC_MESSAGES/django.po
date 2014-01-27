@@ -1,0 +1,102 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-01-18 20:50+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\payments\models.py:54
+msgid "Corporation ID"
+msgstr "תאגיד"
+
+#: .\payments\models.py:55
+msgid "The paying corporation"
+msgstr "התאגיד המשלם"
+
+#: .\payments\models.py:58
+msgid "Input date"
+msgstr "מועד הזנה"
+
+#: .\payments\models.py:59
+msgid "Created At"
+msgstr "נוצר ב"
+
+#: .\payments\models.py:63
+msgid "Created By"
+msgstr "נוצר על ידי"
+
+#: .\payments\models.py:64
+#, fuzzy
+msgid "Who is getting this payment"
+msgstr "הוזן על ידי"
+
+#: .\payments\models.py:70
+msgid "Amount"
+msgstr "סכום לתשלום"
+
+#: .\payments\models.py:71
+msgid "How much money should be paid"
+msgstr "הסכום לתשלום"
+
+#: .\payments\models.py:74
+msgid "Description"
+msgstr "תיאור"
+
+#: .\payments\models.py:75
+msgid "Short description of the payment. Who? What for?"
+msgstr "תיאור קצר של התשלום. ישולם על ידי? עבור?"
+
+#: .\payments\models.py:78
+msgid "Due Date"
+msgstr "מועד אחרון לתשלום"
+
+#: .\payments\models.py:79
+msgid "The date the payment is due"
+msgstr "המועד האחרון לתשלום"
+
+#: .\payments\models.py:82
+msgid "Supply Date"
+msgstr "מועד אספקה"
+
+#: .\payments\models.py:83
+msgid "The date the goods or services where delivared"
+msgstr ""
+
+#: .\payments\models.py:86
+msgid "Order Date"
+msgstr "מועד ביצוע הזמנה"
+
+#: .\payments\models.py:87
+msgid "The date the supply was ordered"
+msgstr "מועד ביצוע הזמנה"
+
+#: .\payments\models.py:92
+msgid "Pay Date"
+msgstr "מועד פרעון"
+
+#: .\payments\models.py:93
+#, fuzzy
+msgid "The date the payment was paid"
+msgstr "מועד פרעון"
+
+#: .\payments\templates\payments\home.html:8
+msgid "My Home Page"
+msgstr "הבית שלי"
+
+#: .\payments\templates\payments\home.html:13
+msgid "Add payment"
+msgstr "הוסף תשלום"
+

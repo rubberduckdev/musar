@@ -1,0 +1,6 @@
+{% load i18n %}
+<form method="post" action="{% url 'home' user.username %}">
+    {% csrf_token %}
+    <input type="submit" name="send" class="btn btn-info" value="{% trans 'Send' %}">
+    <input type="hidden" name="send_reminder" class="btn btn-info" value="{{ record.corporation.email }">
+</form>

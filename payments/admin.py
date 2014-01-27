@@ -13,6 +13,5 @@ from payments import models
 #     search_field = ('buyer', 'seller', 'dueDate')
 
 
-admin.site.register(models.Company)
+admin.site.register(models.Corporation)
 admin.site.register(models.Payment)
-admin.site.register(models.Partner)
