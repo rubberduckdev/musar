@@ -1,97 +1,22 @@
 {% extends "base.html" %}
+{% load i18n %}
+{% load render_table from django_tables2 %}
 
 {% block content %}
-<div class="panel panel-info">
-    <div class="panel-heading">
-        <h3 class="panel-title">התשלומים שלי</h3>
+<div class="row">
+    <div class="col-sm-10">
+        <h3  align="right">{% trans 'My Payments' %}</h3>
     </div>
-    <div class="panel-body">
-        <!-- Table -->
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>מספר מזהה</th>
-                    <th>שם הלקוח</th>
-                    <th>מועד אחרון לתשלום</th>
-                    <th>הסכום לתשלום</th>
-                    <th>דירוג מוסר תשלומים </th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>43556244</td>
-                    <td>משרד החינוך</td>
-                    <td>4/1/2014</td>
-                    <td>300</td>
-                    <td>נמוך</td>
-                </tr>
-                <tr>
-                    <td>12344123</td>
-                    <td>משרד האוצר</td>
-                    <td>4/1/2014</td>
-                    <td>300</td>
-                    <td>אין נתונים</td>
-                </tr>
-                <tr>
-                    <td>12344123</td>
-                    <td>משרד הפנים</td>
-                    <td>31/1/2014</td>
-                    <td>45000</td>
-                    <td>בינוני</td>
-                </tr>
-                <tr>
-                    <td>12344123</td>
-                    <td>משרד האוצר</td>
-                    <td>4/1/2014</td>
-                    <td>300</td>
-                    <td>אין נתונים</td>
-                </tr>
-                <tr>
-                    <td>12344123</td>
-                    <td>משרד האוצר</td>
-                    <td>4/1/2014</td>
-                    <td>300</td>
-                    <td>אין נתונים</td>
-                </tr>
-                <tr>
-                    <td>12344123</td>
-                    <td>משרד האוצר</td>
-                    <td>4/1/2014</td>
-                    <td>300</td>
-                    <td>אין נתונים</td>
-                </tr>
-                <tr>
-                    <td>12344123</td>
-                    <td>משרד האוצר</td>
-                    <td>4/1/2014</td>
-                    <td>300</td>
-                    <td>אין נתונים</td>
-                </tr>
-                <tr>
-                    <td>12344123</td>
-                    <td>משרד האוצר</td>
-                    <td>4/1/2014</td>
-                    <td>300</td>
-                    <td>אין נתונים</td>
-                </tr>
-                <tr>
-                    <td>12344123</td>
-                    <td>משרד האוצר</td>
-                    <td>4/1/2014</td>
-                    <td>300</td>
-                    <td>אין נתונים</td>
-                </tr>
-            </tbody>
-        </table>
-        <ul class="pager">
-            <li>
-                <a href="#">הקודם</a>
-            </li>
-            <li>
-                <a href="#">הבא</a>
-            </li>
-        </ul>
-
+    <div class="col-sm-2">
+        <a href="{% url 'add_payments' user.username %}">
+        <button class="btn btn-info" align="left">
+            {% blocktrans %}Add payment{% endblocktrans %}
+        </button> </a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        {% render_table table %}
     </div>
 </div>
 {% endblock content %}

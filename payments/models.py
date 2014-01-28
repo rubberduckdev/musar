@@ -1,6 +1,8 @@
+from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.datetime_safe import datetime
-from django.contrib.auth.models import User
+from django.utils.translation import ugettext as _
 
 
 class ShareOption(object):
@@ -16,47 +18,18 @@ class ShareOption(object):
     )
 
 
-class Company(models.Model):
-    """ Company profile """
+class Corporation(models.Model):
+    """ Corporation profile """
     cid = models.CharField(
         primary_key=True,
         max_length=200,
         unique=True,
-        help_text="Company's ID",
-    )
-
-    users = models.ManyToManyField(User,
-        related_name='companies',
-        help_text='list of users with permission to edit the company profile',
+        help_text="Corporation's ID",
     )
 
     name = models.CharField(max_length=200, unique=True)
     url = models.URLField(null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
-    shared_with = models.IntegerField(choices=ShareOption.choices,
-        default=ShareOption.NONE,
-        help_text='company\'s sharing data policy')
-
-    def __unicode__(self):
-        return self.name
-
-
-# FIXME: check why http://localhost:8000/admin/payments/partner/ fails
-class Partner(models.Model):
-    """ Company profile """
-    company = models.ForeignKey(Company)
-
-#     users = models.ManyToManyField(User, related_name='partners')
-
-    name = models.CharField(max_length=200, unique=True)
-
-    url = models.URLField(null=True, blank=True)
-
-    email = models.EmailField(null=True, blank=True)
-
-    shared_with = models.IntegerField(choices=ShareOption.choices,
-        default=ShareOption.NONE,
-        help_text='Stores the company\'s prefrences for sharing data')
 
     def __unicode__(self):
         return self.name
@@ -74,26 +47,63 @@ class PaymentType(object):
 
 
 class Payment(models.Model):
-    """Represent private money transaction"""
-    partner = models.ForeignKey(Partner,
-        related_name='partner_payments',
-        help_text='The other side of the transaction',
+    """ Holds the details of a pass or future payment
+        Based on these details the statistics of payments etique are gathered
+    """
+
+    corporation = models.ForeignKey(Corporation,
+        related_name='corporation_payments',
+        verbose_name=_('Corporation ID'),
+        # help_text=_('The paying corporation'),
     )
-    owner = models.ForeignKey(Partner,
-        related_name='my_payments',
-        help_text='The company associated with this transaction',
+    created_at = models.DateTimeField(auto_now_add=True,
+        verbose_name=_('Input date'),
+        help_text=_('Created At'),
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User)
-    type = models.IntegerField(choices=PaymentType.choices)
-    amount = models.DecimalField(max_digits=10, decimal_places=2, null=True,
-                                 blank=True)
-    title = models.CharField(max_length=400)
-    due_date = models.DateField()
-    order_date = models.DateField(default=datetime.now, null=True, blank=True)
-    shared_with = models.IntegerField(choices=ShareOption.choices,
-        default=ShareOption.NONE)
+    owner = models.ForeignKey(User,
+        related_name='payments',
+        verbose_name=_('Created By'),
+        # help_text=_('Who is getting this payment'),
+    )
+    amount = models.DecimalField(max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name=_('Amount'),
+        # help_text=_('How much money should be paid'),
+    )
+    title = models.CharField(max_length=400,
+        verbose_name=_('Description'),
+        # help_text=_('Short description of the payment. Who? What for?'),
+    )
+    due_date = models.DateField(
+        verbose_name=_('Due Date'),
+        # help_text=_('The date the payment is due'),
+    )
+    supply_date = models.DateField(
+        verbose_name=_('Supply Date'),
+        # help_text=_('The date the goods or services where delivared'),
+    )
+    order_date = models.DateField(default=datetime.now,
+        verbose_name=_('Order Date'),
+        # help_text=_('The date the supply was ordered'),
+        null=True,
+        blank=True,
+    )
+    pay_date = models.DateField(
+        verbose_name=_('Pay Date'),
+        # help_text=_('The date the payment was paid'),
+        null=True,
+        blank=True,
+    )
 
     def __unicode__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return reverse('add_payments', kwargs={'pk': self.pk})
+
+    class Meta:
+        verbose_name = _("Payment")
+        verbose_name_plural = _("Payments")
 
