@@ -136,9 +136,9 @@ def load_payments_from_file_view(request, username):
         payments = []
         form = LoadFileForm(request.POST, request.FILES)
         if (form.is_valid()):
-        	csv_file = request.FILES['file']
-#         	payments = PaymentCsvModel.import_from_file(csv_file)
-        	csv_text = csv_file.read() 
+        	csv_file = request.FILES.get('file')
+        	csv_text = ''.join(csv_file.readlines())
+         	payments = PaymentCsvModel.import_from_file(csv_file)
         	return render(request, 'payments/add_payments.html', 
 				{'table': PaymentsTable(payments),
 				'csv_text': csv_text,
@@ -160,24 +160,32 @@ def save_payments_list_view(request, username):
 	if (request.method != 'POST'):
 		return HttpResponseNotFound('<h1>No Page Here</h1>')  
  	
- 	payments = request.POST.get('csv_text')
-	assert False
+ 	csv_data = request.POST.get('csv_text')
+#  	assert False
+# 	stripped_csv_data = (item.strip() for item in csv_data.split())
+ 	payments = PaymentCsvModel.import_data(csv_data.split('\r\n'))
+	for csv_model in payments:
+		corporation = Corporation.objects.get(cid=csv_model.corporation)
+		assert corporation != None
+		p = Payment(
+			corporation=corporation, 
+    		owner=request.user,
+    		amount=csv_model.amount,
+    		title=csv_model.title,
+    		due_date=csv_model.due_date,
+    		supply_date=csv_model.supply_date,
+    		order_date=csv_model.order_date,
+    		pay_date=csv_model.pay_date
+		)
+#  		assert False
+		p.save()
 	return HttpResponseRedirect(reverse_lazy('payments',
         kwargs={'username': username})
     )
 # 	if request.method == 'POST':
 # 		pass
 # 		payments = request.session.get('payments')
-# 		for item in payments.items():
-# 			p = Payement(corporation=p.corporation, 
-# 				owner=request.user,
-# 				amount=p.amount,
-# 				title=p.title,
-# 				due_date=p.due_date,
-# 				supply_date=p.supply_date,
-# 				order_date=p.order_date,
-# 				pay_date=p.pay_date
-# 			)
+
 # 			p.save()
 
 
