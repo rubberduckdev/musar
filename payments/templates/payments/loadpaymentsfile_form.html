@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load static %}
+{{% load floppyforms %}
+<!DOCTYPE html>
+{% form payment_form using "floppyforms/layouts/table.html" %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data" action="">
+  {% csrf_token %}
+      {{ form.as_p }}
+  <input type="submit" class="btn btn-lg btn-primary" />
+          Load          
+</form>
+{% endblock content %}

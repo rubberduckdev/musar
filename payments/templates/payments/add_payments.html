@@ -1,31 +1,29 @@
 {% extends "base.html" %}
-{% load static %}
-
+{% load i18n %}
+{% load render_table from django_tables2 %}
 {% block header %}
-<!--<link rel="stylesheet" href="{% static 'payments/chosen/docsupport/style.css' %}">-->
-<link rel="stylesheet" href="{% static 'payments/chosen/docsupport/prism.css' %}">
-<link href="{% static 'payments/chosen/chosen.css' %}" rel="stylesheet">
-<style type="text/css" media="all">
-    /* fix rtl for demo */
-    .chosen-rtl .chosen-drop {
-        left: -9000px;
-    }
-</style>
+<link rel="stylesheet" href="{{ STATIC_URL }}django_tables2/themes/paleblue/css/screen.css" />
 {% endblock header %}
 
 {% block content %}
-<div id="container">
-    <div id="content">
-        <div class="row">
-            <select data-placeholder="בחר תאגיד" class="chosen-select chosen-rtl" style="width:350px;" tabindex="1">
-                <option value=""></option>
-                <option value="aa">משרד האוצר</option>
-                <option value="bb">משרד הפנים</option>
-                <option value="cc">משרד החינוך</option>
-                <option value="dd">משרד הדתות</option>
-            </select>
-        </div>
+<div class="row">
+    <div class="col-sm-10">
+        <h3  align="right">{% trans 'Payments From File' %}</h3>
+    </div>
+    <div class="col-sm-2">
+        <form method = "POST" action="{% url 'save_payments_file' user.username %}">>
+            {% csrf_token %}
+            <input type="submit" class="btn btn-info" align="left">
+                {% blocktrans %}Save All{% endblocktrans %}
+            </input>
+            <input type="hidden" name='csv_text' value="{{ csv_text }}"/>
+            <input type="hidden" name='csv_file_type' value="{{ csv_file_type }}"/>
+        </form>
     </div>
 </div>
-
+<div class="row">
+    <div class="col-md-12">
+        {% render_table table %}
+    </div>
+</div>
 {% endblock content %}
