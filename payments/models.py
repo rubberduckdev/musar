@@ -1,14 +1,10 @@
-from datetime import timedelta
-
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.utils.datetime_safe import datetime, date
+from django.utils.datetime_safe import datetime
 from django.utils.translation import ugettext as _
-from django.db.models.signals import post_save
 import json
 
-MAX_LEGAL_CREDIT_DAYS=45
 
 def dthandler(obj):
     if isinstance(obj, datetime):
@@ -43,43 +39,12 @@ class Corporation(models.Model):
     url = models.URLField(null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
 
+    def __repr__(self):
+        return json.dumps(self.__dict__, default=dthandler)
 
     def __unicode__(self):
         return self.name
-    
-    @property
-    def payments_count(self):
-        return self.payment_set.count()
-    
-    @property
-    def total_late_days(self):
-        days = 0
-        for payment in self.payment_set.all():
-            days += payment.lateness_days
-        return days
-#         return self.payment_set.filter()
-    
-    @property
-    def late_payments_count(self):
-        late_payments_set = [payment for payment in self.payment_set.all() \
-            if payment.lateness_days > 0]
-        return len(late_payments_set)
-    
-    @property
-    def lateness_average(self):
-        return self.total_late_days/self.payments_count
-    
-    @property
-    def total_credit_days(self):
-        days = 0
-        for payment in self.payment_set.all():
-            days += payment.credit_days
-        return days
-        
-    @property
-    def credit_average(self):
-        return self.total_credit_days/self.payments_count
-        
+
 
 class PaymentType(object):
     """indication if this is payment to or payment by"""
@@ -92,14 +57,6 @@ class PaymentType(object):
     )
 
 
-def regulation_due_date(supply_date):
-    """ Due date might be latter than regulations premits. In such case,
-        the latest date regulation allow is returned. 
-    """
-    max_legal_credit_date = supply_date + timedelta(days=MAX_LEGAL_CREDIT_DAYS)
-    return max_legal_credit_date
-
-
 class Payment(models.Model):
     """ Holds the details of a pass or future payment
         Based on these details the statistics of payments etique are gathered
@@ -107,7 +64,7 @@ class Payment(models.Model):
 
     corporation = models.ForeignKey(
         Corporation,
-#         related_name='corporation_payments',
+        related_name='corporation_payments',
         verbose_name=_('Corporation ID'),
         # help_text=_('The paying corporation'),
     )
@@ -118,7 +75,7 @@ class Payment(models.Model):
     )
     owner = models.ForeignKey(
         User,
-#         related_name='payments',
+        related_name='payments',
         verbose_name=_('Created By'),
         # help_text=_('Who is getting this payment'),
     )
@@ -157,6 +114,9 @@ class Payment(models.Model):
         blank=True,
     )
 
+    def __repr__(self):
+        return json.dumps(self.__dict__, default=dthandler)
+
     def __unicode__(self):
         return self.title
 
@@ -177,77 +137,6 @@ class Payment(models.Model):
             supply_date=supply_date
         )
 
-    @property
-    def lateness_days(self):
-        effective_due_date = min(self.due_date, 
-            regulation_due_date(self.supply_date)
-        )
-        if (self.pay_date == None):
-            # ToDo: add test for this if
-            return max(0, (date.today() - effective_due_date).days)
-        return max((self.pay_date - effective_due_date).days, 0)
-    
-    @property
-    def credit_days(self):
-        if (self.pay_date == None):
-            # ToDo: add test for this if
-            return max(0, (date.today() - self.supply_date).days)
-        return max(0, (self.pay_date - self.supply_date).days)
-
     class Meta:
         verbose_name = _("Payment")
         verbose_name_plural = _("Payments")
-        
-
-class UserProfile(models.Model):  
-    user = models.OneToOneField(User)  
-    #other fields here
-
-    def __str__(self):  
-          return "%s's profile" % self.user  
-
-    def create_user_profile(sender, instance, created, **kwargs):  
-        if created:  
-           profile, created = UserProfile.objects.get_or_create(user=instance)  
-           
-    @property
-    def payments_count(self):
-        return self.user.payment_set.count()
-    
-    @property
-    def total_late_days(self):
-        days = 0
-        for payment in self.user.payment_set.all():
-            days += payment.lateness_days
-        return days
-    
-    @property
-    def late_payments_count(self):
-        late_payments = [payment for payment in self.user.payment_set.all() \
-            if payment.lateness_days > 0]
-        return len(late_payments)
-    
-    @property
-    def lateness_average(self):
-        if self.payments_count > 0:
-            return self.total_late_days/self.payments_count
-        return 0
-    
-    @property
-    def total_credit_days(self):
-        days = 0
-        for payment in self.user.payment_set.all():
-            days += payment.credit_days
-        return days
-        
-    @property
-    def credit_average(self):
-        if self.payments_count > 0:
-            return self.total_credit_days/self.payments_count
-        return 0
-
-
-    post_save.connect(create_user_profile, sender=User) 
-        
-        
-
