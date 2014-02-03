@@ -102,12 +102,12 @@ STATIC_URL = '/static/'
 LOGIN_URL = "/login/"
 # LOGIN_REDIRECT_URL = "home"
 
-TEMPLATE_STRING_IF_INVALID = ""
+TEMPLATE_STRING_IF_INVALID = "Opps"
 
 
 # Overide global with local settings
 # TODO FIXME Is it right to just print the error and continue as nothing happened here?
-try:# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+try:  # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
     import local_settings
     BASE_DIR = local_settings.BASE_DIR
     DEBUG = local_settings.DEBUG

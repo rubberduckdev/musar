@@ -1,5 +1,5 @@
 from adaptor.model import CsvModel
-from adaptor.fields import *
+from adaptor.fields import DateField, DjangoModelField, CharField, DecimalField
 from payments.models import Payment, Corporation
 from django.contrib.auth.models import User
 

@@ -2,7 +2,6 @@ from django import forms
    
    
 class FullNameFileField(forms.FileField):
-    
     def get_full_name(self):
         if getattr(instance, self.attname):
             file_name = getattr(instance, 'get_%s_filename' % self.name)()

@@ -3,10 +3,12 @@ from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse_lazy
 from django.views.generic.base import TemplateView
-from payments.views import index, HomeView, PaymentCreate, statistics, \
-    settings, register, search, after_login, PaymentsList, corporation_detail, \
-    LoadPaymentsFileView, PaymentsFileView, load_payments_from_file_view, \
-    AddPaymentsList, save_payments_list_view
+from payments.views import (
+    index, HomeView, PaymentCreate, statistics,
+    settings, register, search, after_login, PaymentsList, corporation_detail,
+    LoadPaymentsFileView, PaymentsFileView, load_payments_from_file_view,
+    AddPaymentsList, save_payments_list_view,
+)
 
 
 admin.autodiscover()

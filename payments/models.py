@@ -34,8 +34,6 @@ class Corporation(models.Model):
     url = models.URLField(null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
 
-#     def __repr__(self):
-#         return json.dumps(self.__dict__, default=dthandler)    
     
     def __unicode__(self):
         return self.name
@@ -50,7 +48,6 @@ class PaymentType(object):
                (IN, 'In'),
                (OUT, 'Out'),
                )
-
 
 
 class Payment(models.Model):
