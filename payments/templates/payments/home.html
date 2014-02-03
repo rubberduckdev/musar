@@ -5,8 +5,14 @@
 {% block content %}
 <div class="container">
     <div class="row">
-        <div class="col-sm-10">
+        <div class="col-sm-8">
             <h3  align="right">{% trans 'My Home Page' %}</h3>
+        </div>
+        <div class="col-sm-2">
+            <a href="{% url 'add_payments_file' user.username %}">
+            <button class="btn btn-info" align="left">
+                {% blocktrans %}Add payments file{% endblocktrans %}
+            </button> </a>
         </div>
         <div class="col-sm-2">
             <a href="{% url 'add_payments' user.username %}">
