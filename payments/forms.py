@@ -12,15 +12,14 @@ logger = logging.getLogger(__name__)
 
 
 class LoadFileForm(forms.Form):
-    
     file = FileField()
-        
+
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         if kwargs.get('instance'):
             kwargs.setdefault('initial', {})['owner'] = self.user
         super(LoadFileForm, self).__init__(*args, **kwargs)
- 
+
 
 class AddPaymentForm(ModelForm):
 
@@ -32,7 +31,8 @@ class AddPaymentForm(ModelForm):
 
     class Meta:
         model = Payment
-        fields = ('corporation',
+        fields = (
+            'corporation',
             'title',
             'amount',
             'due_date',

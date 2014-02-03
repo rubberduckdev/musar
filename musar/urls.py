@@ -61,26 +61,27 @@ urlpatterns = patterns('',
         TemplateView.as_view(template_name="payments/company.html"),
         name='company'),
 
-#     url(r'^user/(?P<username>\w+)/add_payments/$',
-#         login_required(TemplateView.as_view(template_name="payments/add_payments.html")),
-#         name='add_payments'),
+#    url(r'^user/(?P<username>\w+)/add_payments/$',
+#        login_required(TemplateView.as_view(
+#            template_name="payments/add_payments.html")),
+#        name='add_payments'),
 
     url(r'^user/(?P<username>\w+)/add_payments/$',
         PaymentCreate.as_view(),
         name='add_payments'),
-                       
+
     url(r'^user/(?P<username>\w+)/add_payments_file/$',
         load_payments_from_file_view,
         name='add_payments_file'),
-                       
-    url(r'^user/(?P<username>\w+)/add_payments_list/$', 
+
+    url(r'^user/(?P<username>\w+)/add_payments_list/$',
         AddPaymentsList.as_view(),
         name='add_payments_list'),
-                       
-    url(r'^user/(?P<username>\w+)/save_payments_file/$', 
+
+    url(r'^user/(?P<username>\w+)/save_payments_file/$',
         save_payments_list_view,
         name='save_payments_file'),
-                       
+
     url(r'^file/$',
         PaymentsFileView.as_view(),
         name='file'),

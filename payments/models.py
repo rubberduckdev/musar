@@ -5,7 +5,12 @@ from django.utils.datetime_safe import datetime
 from django.utils.translation import ugettext as _
 import json
 
-dthandler = lambda obj: obj.isoformat() if isinstance(obj, datetime) else json.JSONEncoder().default(obj)
+
+def dthandler(obj):
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    else:
+        return json.JSONEncoder().default(obj)
 
 
 class ShareOption(object):
@@ -36,7 +41,7 @@ class Corporation(models.Model):
 
     def __repr__(self):
         return json.dumps(self.__dict__, default=dthandler)
-    
+
     def __unicode__(self):
         return self.name
 
@@ -47,9 +52,9 @@ class PaymentType(object):
     OUT = 2
 
     choices = (
-               (IN, 'In'),
-               (OUT, 'Out'),
-               )
+        (IN, 'In'),
+        (OUT, 'Out'),
+    )
 
 
 class Payment(models.Model):
@@ -57,28 +62,33 @@ class Payment(models.Model):
         Based on these details the statistics of payments etique are gathered
     """
 
-    corporation = models.ForeignKey(Corporation,
+    corporation = models.ForeignKey(
+        Corporation,
         related_name='corporation_payments',
         verbose_name=_('Corporation ID'),
         # help_text=_('The paying corporation'),
     )
-    created_at = models.DateTimeField(auto_now_add=True,
+    created_at = models.DateTimeField(
+        auto_now_add=True,
         verbose_name=_('Input date'),
         help_text=_('Created At'),
     )
-    owner = models.ForeignKey(User,
+    owner = models.ForeignKey(
+        User,
         related_name='payments',
         verbose_name=_('Created By'),
         # help_text=_('Who is getting this payment'),
     )
-    amount = models.DecimalField(max_digits=10,
+    amount = models.DecimalField(
+        max_digits=10,
         decimal_places=2,
         null=True,
         blank=True,
         verbose_name=_('Amount'),
         # help_text=_('How much money should be paid'),
     )
-    title = models.CharField(max_length=400,
+    title = models.CharField(
+        max_length=400,
         verbose_name=_('Description'),
         # help_text=_('Short description of the payment. Who? What for?'),
     )
@@ -90,7 +100,8 @@ class Payment(models.Model):
         verbose_name=_('Supply Date'),
         # help_text=_('The date the goods or services where delivared'),
     )
-    order_date = models.DateField(default=datetime.now,
+    order_date = models.DateField(
+        default=datetime.now,
         verbose_name=_('Order Date'),
         # help_text=_('The date the supply was ordered'),
         null=True,
@@ -102,30 +113,30 @@ class Payment(models.Model):
         null=True,
         blank=True,
     )
-    
+
     def __repr__(self):
-        return json.dumps(self.__dict__, default=dthandler)    
+        return json.dumps(self.__dict__, default=dthandler)
 
     def __unicode__(self):
         return self.title
 
     def get_absolute_url(self):
         return reverse('add_payments', kwargs={'pk': self.pk})
-    
+
     @classmethod
     def create(cls, corporation, owner, amount, title, due_date, supply_date):
         c = Corporation.objects.get(name=corporation)
-        if c==None:
+        if c is None:
             raise ValueError
-        payment = cls(corporation=c, 
-            owner=owner, 
-            amount=amount, 
-            title=title, 
-            due_date=due_date, 
+        payment = cls(
+            corporation=c,
+            owner=owner,
+            amount=amount,
+            title=title,
+            due_date=due_date,
             supply_date=supply_date
         )
 
     class Meta:
         verbose_name = _("Payment")
         verbose_name_plural = _("Payments")
-

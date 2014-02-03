@@ -30,16 +30,10 @@ class CompanyTest(TestCase):
             2, Company.objects.count()
         )
 
-        """ Test retrive companies by name"""
-        self.assertEqual(
-            1,
-            Company.objects.filter(name='Hasadna').count())
-        self.assertEqual(
-            1,
-            Company.objects.filter(name='Avi').count())
-        self.assertEqual(
-             0,
-             Company.objects.filter(name='Moshe').count())
+        # Test retrieve companies by name
+        self.assertEqual(1, Company.objects.filter(name='Hasadna').count())
+        self.assertEqual(1, Company.objects.filter(name='Avi').count())
+        self.assertEqual(0, Company.objects.filter(name='Moshe').count())
         # TODO: how do I retrieve the preferences for company2
 
 
@@ -67,13 +61,10 @@ class PaymentTest(TestCase):
             orderdate=datetime.now(),
             input_user=self.company1,
         )
-        self.assertEqual(
-            1, Payment.objects.count())
+        self.assertEqual(1, Payment.objects.count())
 
-    """
-            Test in and out payments counts before and after creating a
-            payment
-    """
+    #       Test in and out payments counts before and after creating a
+    #       payment
     def test_company_payements_associations(self):
 
         self.assertEqual(
