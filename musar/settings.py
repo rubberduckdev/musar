@@ -37,7 +37,6 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'payments',
-    'debug_toolbar',
     'django_tables2',
     'floppyforms',
 )
@@ -103,13 +102,22 @@ STATIC_URL = '/static/'
 LOGIN_URL = "/login/"
 # LOGIN_REDIRECT_URL = "home"
 
-TEMPLATE_STRING_IF_INVALID = "Opps"
+TEMPLATE_STRING_IF_INVALID = ""
 
 
 # Overide global with local settings
 # TODO FIXME Is it right to just print the error and continue as nothing happened here?
-try:
-    from local_settings import *
-
+try:# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+    import local_settings
+    BASE_DIR = local_settings.BASE_DIR
+    DEBUG = local_settings.DEBUG
+    EMAIL_BACKEND = local_settings.EMAIL_BACKEND
+    DATABASES = local_settings.DATABASES
+    SECRET_KEY = local_settings.SECRET_KEY
+    ALLOWED_HOSTS = local_settings.ALLOWED_HOSTS
+    STATIC_ROOT = local_settings.STATIC_ROOT
+    STATICFILES_DIRS = local_settings.STATICFILES_DIRS
+    INSTALLED_APPS = INSTALLED_APPS + local_settings.INSTALLED_APPS
+    
 except ImportError as e:
     print e
