@@ -1,5 +1,9 @@
 Django==1.6.1
+django-debug-toolbar==0.11.0
+django-extensions==1.2.5
+django-money==0.4.1
 django-floppyforms==1.1.1
+ipython==1.1.0
 pyreadline==2.0
 six==1.4.1
 sqlparse==0.1.10
