@@ -121,17 +121,30 @@ class UtilsTest(TestCase):
         supply: time of goods delivery-
         due: agreed time of payment
         pay: actual time of payment
-        credit = pay - supply
-        late = max(pay - due, 0)
+        credit:
+        |-------|---------|
+    supply    due       pay
+
+        |-----------------|
+          credit_days
+
+                |---------|
+                 late_days
+
+        credit_days = max(pay_date - supply_date, 0)
+        late_days = max(pay_date - due_date, 0)
+        pay_date = due_date + late_days
+                 = supply_date + credit_days
+        credit_days - late_days = due_date - supply_date
         """
 
-        credit_days = 100
-        late_days = 84
-        supply_date = date(2008, 8, 18)
-        due_date = supply_date + timedelta(days=credit_days)
-        late_date = supply_date + timedelta(days=late_days)
+        self.credit_days = 100
+        self.late_days = 84
+        self.due_days = 30
 
-        self.days = (due_date - late_date).days
+        self.supply_date = date(2008, 8, 18)
+        self.due_date = supply_date + timedelta(days=due_days)
+        self.pay_date = due_date + timedelta(days=late_days)
 
         print self.delta.days
 
