@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
@@ -5,6 +7,7 @@ from django.utils.datetime_safe import datetime
 from django.utils.translation import ugettext as _
 import json
 
+MAX_LEGAL_CREDIT_DAYS=45
 
 def dthandler(obj):
     if isinstance(obj, datetime):
@@ -138,7 +141,9 @@ class Payment(models.Model):
         )
 
     def lateness_days(self):
-        return max((self.pay_date - self.due_date).days, 0)
+        max_legal_credit_date = self.supply_date + timedelta(days=MAX_LEGAL_CREDIT_DAYS)
+        legal_due_date = min(self.due_date, max_legal_credit_date)
+        return max((self.pay_date - legal_due_date).days, 0)
 
     def credit_days(self):
         return None
