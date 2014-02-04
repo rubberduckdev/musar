@@ -238,27 +238,22 @@ time
 
         self.assertEqual(our_payment.lateness_days(), 0)
 
-    """
-    def test_credit_when_payment_before_due_time(self):
-
+    def test_lateness_when_payment_before_supply(self):
+        """
 Le diagram
 ----------
 
 ```
         |-------|---------|
-    supply    pay       due
-
-        |-------|
-       credit_days
+      pay    supply      due
 -->
 time
 ```
-        credit_days = 20
-
+        """
 
         supply_date = date(2008, 8, 18)
         due_date = supply_date + timedelta(days=30)
-        pay_date = supply_date + timedelta(days=credit_days)
+        pay_date = supply_date - timedelta(days=20)
 
         our_payment = Payment.objects.create(
             corporation=self.c1,
@@ -271,8 +266,77 @@ time
             pay_date=pay_date
         )
 
-        self.assertEqual(our_payment.credit_days(), credit_days)
+        self.assertEqual(our_payment.lateness_days(), 0)
+
+    def test_lateness_when_due_date_is_illegal(self):
         """
+Le diagram
+----------
+
+```
+        |------------|---------------|---------|
+      supply     45 days            due       pay
+                since supply
+-->
+time
+```
+        """
+
+        legal_max_days = 45
+
+        supply_date = date(2008, 8, 18)
+        due_date = supply_date + timedelta(days=legal_max_days + 15)
+        pay_date = due_date + timedelta(days=10)
+        late_days = 25
+
+        our_payment = Payment.objects.create(
+            corporation=self.c1,
+            owner=self.u1,
+            #amount=csv_model.amount,
+            #title=csv_model.title,
+            due_date=due_date,
+            supply_date=supply_date,
+            #order_date=d1,
+            pay_date=pay_date
+        )
+
+        self.assertEqual(our_payment.lateness_days(), late_days)
+
+#    def test_credit_when_payment_before_due_time(self):
+#
+#        """
+#Le diagram
+#----------
+#
+#```
+#        |-------|---------|
+#    supply    pay       due
+#
+#        |-------|
+#       credit_days
+#-->
+#time
+#```
+#        """
+#        credit_days = 20
+#
+#
+#        supply_date = date(2008, 8, 18)
+#        due_date = supply_date + timedelta(days=30)
+#        pay_date = supply_date + timedelta(days=credit_days)
+#
+#        our_payment = Payment.objects.create(
+#            corporation=self.c1,
+#            owner=self.u1,
+#            #amount=csv_model.amount,
+#            #title=csv_model.title,
+#            due_date=due_date,
+#            supply_date=supply_date,
+#            #order_date=d1,
+#            pay_date=pay_date
+#        )
+#
+#        self.assertEqual(our_payment.credit_days(), credit_days)
 
 #        from django.test import TestCase
 #        from myapp.models import Animal
