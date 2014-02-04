@@ -4,7 +4,6 @@ from datetime import date, timedelta #time, date
 from payments.models import (
     Corporation, Payment,
 )
-from payments.utils import lateness_days
 
 
 # Create your tests here.
@@ -115,13 +114,17 @@ from payments.utils import lateness_days
 class UtilsTest(TestCase):
     def setUp(self):
         self.u1 = User.objects.create(username='user1')
-        #self.up1 = UserProfile.objects.create(user=self.u1)
 
         """
         supply: time of goods delivery-
         due: agreed time of payment
         pay: actual time of payment
         credit:
+
+Le diagram
+----------
+
+```
         |-------|---------|
     supply    due       pay
 
@@ -130,23 +133,25 @@ class UtilsTest(TestCase):
 
                 |---------|
                  late_days
+```
 
         credit_days = max(pay_date - supply_date, 0)
-        late_days = max(pay_date - due_date, 0)
-        pay_date = due_date + late_days
-                 = supply_date + credit_days
+            # credit_days >= 0
+
+        late_days = max(
+            pay_date - min(due_date, max_legal_due_date), 0)
+            # late_days >= 0
+
+        pay_date = min(due_date, max_legal_due_date) + late_days
+        = supply_date + credit_days
+
+        max_legal_due_date = supply_date + 45
+
         credit_days - late_days = due_date - supply_date
+
+        due_date = supply_date
+                 + timedelta(days=credit_days - late_days)
         """
-
-        self.credit_days = 100
-        self.late_days = 84
-        self.due_days = 30
-
-        self.supply_date = date(2008, 8, 18)
-        self.due_date = supply_date + timedelta(days=due_days)
-        self.pay_date = due_date + timedelta(days=late_days)
-
-        print self.delta.days
 
         #http://stackoverflow.com/questions/151199/how-do-i-calculate-number-of-days-betwen-two-dates-using-python
         #http://docs.python.org/2/library/datetime.html
@@ -155,27 +160,119 @@ class UtilsTest(TestCase):
             cid="fsf"
         )
 
-        self.p1 = Payment.objects.create(
+
+    def tearDown(self):
+        self.c1.delete()
+        self.u1.delete()
+
+    def test_lateness_when_late(self):
+        """
+Le diagram
+----------
+
+```
+        |-------|---------|
+    supply    due       pay
+
+        |-----------------|
+          credit_days
+
+                |---------|
+                 late_days
+```
+        """
+
+        credit_days = 100
+        late_days = 84
+
+        supply_date = date(2008, 8, 18)
+        due_date = supply_date + timedelta(days=credit_days-late_days)
+        pay_date = due_date + timedelta(days=late_days)
+
+        p1 = Payment.objects.create(
             corporation=self.c1,
             owner=self.u1,
             #amount=csv_model.amount,
             #title=csv_model.title,
             due_date=due_date,
-            supply_date=due_date,
+            supply_date=supply_date,
             #order_date=d1,
             pay_date=pay_date
         )
 
-    def tearDown(self):
-        self.p1.delete()
-        self.c1.delete()
+        self.assertEqual(p1.lateness_days(), late_days)
 
-    def test_create_lateness_delta(self):
+    def test_lateness_when_payment_before_due_time(self):
+        """
+Le diagram
+----------
 
-        print 'delta', self.delta
-        print 'lateness_delta', lateness_delta(self.p1)
-        assert lateness_delta(self.p1) == -8
+```
+        |-------|---------|
+    supply    pay       due
 
+        |-------|
+       credit_days
+-->
+time
+```
+        """
+
+        credit_days = 20
+
+
+        supply_date = date(2008, 8, 18)
+        due_date = supply_date + timedelta(days=30)
+        pay_date = supply_date + timedelta(days=credit_days)
+
+        our_payment = Payment.objects.create(
+            corporation=self.c1,
+            owner=self.u1,
+            #amount=csv_model.amount,
+            #title=csv_model.title,
+            due_date=due_date,
+            supply_date=supply_date,
+            #order_date=d1,
+            pay_date=pay_date
+        )
+
+        self.assertEqual(our_payment.lateness_days(), 0)
+
+    """
+    def test_credit_when_payment_before_due_time(self):
+
+Le diagram
+----------
+
+```
+        |-------|---------|
+    supply    pay       due
+
+        |-------|
+       credit_days
+-->
+time
+```
+        credit_days = 20
+
+
+        supply_date = date(2008, 8, 18)
+        due_date = supply_date + timedelta(days=30)
+        pay_date = supply_date + timedelta(days=credit_days)
+
+        our_payment = Payment.objects.create(
+            corporation=self.c1,
+            owner=self.u1,
+            #amount=csv_model.amount,
+            #title=csv_model.title,
+            due_date=due_date,
+            supply_date=supply_date,
+            #order_date=d1,
+            pay_date=pay_date
+        )
+
+        self.assertEqual(our_payment.credit_days(), credit_days)
+        """
 
 #        from django.test import TestCase
 #        from myapp.models import Animal

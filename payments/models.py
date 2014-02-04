@@ -137,6 +137,14 @@ class Payment(models.Model):
             supply_date=supply_date
         )
 
+    def lateness_days(self):
+        return max((self.pay_date - self.due_date).days, 0)
+
+    def credit_days(self):
+        return None
+        return (self.pay_date - self.supply_date).days
+        #return min(0, (self.pay_date - self.supply_date).days)
+
     class Meta:
         verbose_name = _("Payment")
         verbose_name_plural = _("Payments")
