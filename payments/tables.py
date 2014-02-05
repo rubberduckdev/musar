@@ -10,7 +10,8 @@ class PaymentsTable(tables.Table):
         supply_date = columns.DateColumn()
         due_date = columns.DateColumn()
         pay_date = columns.DateColumn()
-        sequence = ('id',
+        sequence = (
+            'id',
             'corporation',
             'title',
             'amount',
@@ -24,7 +25,8 @@ class PaymentsTable(tables.Table):
 
 class PaymentsPartialTable(tables.Table):
 
-    action = columns.TemplateColumn(accessor='corporation.email',
+    action = columns.TemplateColumn(
+        accessor='corporation.email',
         verbose_name='Send Reminder',
         template_name='payments/send_reminder.html',
         orderable=False)
@@ -34,14 +36,16 @@ class PaymentsPartialTable(tables.Table):
     class Meta:
         model = Payment
         due_date = columns.DateColumn()
-        exclude = ('owner',
+        exclude = (
+            'owner',
             'created_at',
             'id',
             'order_date',
             'supply_date',
             'pay_date'
         )
-        sequence = ('corporation',
+        sequence = (
+            'corporation',
             'title',
             'amount',
             'due_date',
@@ -49,6 +53,3 @@ class PaymentsPartialTable(tables.Table):
             'action',
         )
         attrs = {"class": "table"}
-
-
-
