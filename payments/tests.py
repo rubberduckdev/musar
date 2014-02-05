@@ -113,13 +113,13 @@ from payments.models import (
 
 class UtilsTest(TestCase):
     def setUp(self):
-        self.u1 = User.objects.create(username='user1')
+        self.user_1 = User.objects.create(username='user1')
 
         """
-        supply: time of goods delivery-
-        due: agreed time of payment
-        pay: actual time of payment
-        credit:
+supply: time of goods delivery-
+due: agreed time of payment
+pay: actual time of payment
+credit:
 
 Le diagram
 ----------
@@ -156,14 +156,14 @@ Le diagram
         #http://stackoverflow.com/questions/151199/how-do-i-calculate-number-of-days-betwen-two-dates-using-python
         #http://docs.python.org/2/library/datetime.html
 
-        self.c1 = Corporation.objects.create(
+        self.coproration_1 = Corporation.objects.create(
             cid="fsf"
         )
 
 
     def tearDown(self):
-        self.c1.delete()
-        self.u1.delete()
+        self.corporation_1.delete()
+        self.user_1.delete()
 
     def test_lateness_when_late(self):
         """
@@ -190,8 +190,8 @@ Le diagram
         pay_date = due_date + timedelta(days=late_days)
 
         p1 = Payment.objects.create(
-            corporation=self.c1,
-            owner=self.u1,
+            corporation=self.corporation_1,
+            owner=self.user_1,
             #amount=csv_model.amount,
             #title=csv_model.title,
             due_date=due_date,
@@ -226,8 +226,8 @@ time
         pay_date = supply_date + timedelta(days=credit_days)
 
         our_payment = Payment.objects.create(
-            corporation=self.c1,
-            owner=self.u1,
+            corporation=self.corporation_1,
+            owner=self.user_1,
             #amount=csv_model.amount,
             #title=csv_model.title,
             due_date=due_date,
@@ -256,8 +256,8 @@ time
         pay_date = supply_date - timedelta(days=20)
 
         our_payment = Payment.objects.create(
-            corporation=self.c1,
-            owner=self.u1,
+            corporation=self.corporation_1,
+            owner=self.user_1,
             #amount=csv_model.amount,
             #title=csv_model.title,
             due_date=due_date,
@@ -274,11 +274,19 @@ Le diagram
 ----------
 
 ```
-        |------------|---------------|---------|
-      supply     45 days            due       pay
-                since supply
--->
-time
+        |-----------|----------|-----|
+
+      ------   ------------   ---   ---
+     |supply| |   45 days  | |due| |pay|
+      ------  |since supply|  ---   ---
+               ------------
+
+        |----------------------------|
+                    ------
+                   |credit|
+                    ------
+    -->
+    time
 ```
         """
 
@@ -290,8 +298,8 @@ time
         late_days = 25
 
         our_payment = Payment.objects.create(
-            corporation=self.c1,
-            owner=self.u1,
+            corporation=self.corporation_1,
+            owner=self.user_1,
             #amount=csv_model.amount,
             #title=csv_model.title,
             due_date=due_date,
@@ -302,6 +310,48 @@ time
 
         self.assertEqual(our_payment.lateness_days(), late_days)
 
+    def test_credit_when_due_date_is_illegal(self):
+        """
+Le diagram
+----------
+
+```
+        |-----------|----------|-----|
+
+      ------   ------------   ---   ---
+     |supply| |   45 days  | |due| |pay|
+      ------  |since supply|  ---   ---
+               ------------
+
+        |----------------------------|
+                    ------
+                   |credit|
+                    ------
+    -->
+    time
+```
+        """
+
+        legal_max_days = 45
+
+        supply_date = date(2008, 8, 18)
+        due_date = supply_date + timedelta(days=legal_max_days + 15)
+        pay_date = due_date + timedelta(days=10)
+        late_days = 25
+        credit_days = pay_date - supply_date
+
+        our_payment = Payment.objects.create(
+            corporation=self.corporation_1,
+            owner=self.user_1,
+            #amount=csv_model.amount,
+            #title=csv_model.title,
+            due_date=due_date,
+            supply_date=supply_date,
+            #order_date=d1,
+            pay_date=pay_date
+        )
+
+        self.assertEqual(our_payment.credit_days(), late_days)
 #    def test_credit_when_payment_before_due_time(self):
 #
 #        """
@@ -326,8 +376,8 @@ time
 #        pay_date = supply_date + timedelta(days=credit_days)
 #
 #        our_payment = Payment.objects.create(
-#            corporation=self.c1,
-#            owner=self.u1,
+#            corporation=self.corporation_1,
+#            owner=self.user_1,
 #            #amount=csv_model.amount,
 #            #title=csv_model.title,
 #            due_date=due_date,
