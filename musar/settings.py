@@ -117,7 +117,7 @@ try:  # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
     ALLOWED_HOSTS = local_settings.ALLOWED_HOSTS
     STATIC_ROOT = local_settings.STATIC_ROOT
     STATICFILES_DIRS = local_settings.STATICFILES_DIRS
-    INSTALLED_APPS = INSTALLED_APPS + local_settings.INSTALLED_APPS
+    INSTALLED_APPS = local_settings.INSTALLED_APPS + INSTALLED_APPS
     
 except ImportError as e:
     print e
