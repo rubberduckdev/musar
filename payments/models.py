@@ -45,6 +45,19 @@ class Corporation(models.Model):
 
     def __unicode__(self):
         return self.name
+    
+    @property
+    def get_total_late_days(self):
+        return None
+    
+    @property
+    def get_payments_count(self):
+        return None
+    
+    @property
+    def get_late_payments_count(self):
+        return None
+    
 
 
 class PaymentType(object):
@@ -135,15 +148,15 @@ class Payment(models.Model):
             supply_date=supply_date
         )
 
+    @property
     def lateness_days(self):
         max_legal_credit_date = self.supply_date + timedelta(days=MAX_LEGAL_CREDIT_DAYS)
         legal_due_date = min(self.due_date, max_legal_credit_date)
         return max((self.pay_date - legal_due_date).days, 0)
 
+    @property
     def credit_days(self):
-        return None
-        return (self.pay_date - self.supply_date).days
-        #return min(0, (self.pay_date - self.supply_date).days)
+        return max(0, (self.pay_date - self.supply_date).days)
 
     class Meta:
         verbose_name = _("Payment")
