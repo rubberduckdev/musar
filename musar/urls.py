@@ -6,7 +6,7 @@ from django.views.generic.base import TemplateView
 from payments.views import (
     index, HomeView, PaymentCreate, statistics,
     settings, register, search, after_login, PaymentsList, corporation_detail,
-    LoadPaymentsFileView, load_payments_from_file_view,
+    load_payments_from_file_view,
     save_payments_list_view,
 )
 

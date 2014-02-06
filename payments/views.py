@@ -181,46 +181,46 @@ def save_payments_list_view(a_request, username):
     )
 
 
-class LoadPaymentsFileView(FormView):
-    form_class = LoadFileForm
-    template_name = 'payments/loadpaymentsfile_form.html'
-
-    def get_form_kwargs(self):
-        kwargs = super(LoadPaymentsFileView, self).get_form_kwargs()
-        kwargs['user'] = self.request.user
+# class LoadPaymentsFileView(FormView):
+#     form_class = LoadFileForm
+#     template_name = 'payments/loadpaymentsfile_form.html'
+# 
+#     def get_form_kwargs(self):
+#         kwargs = super(LoadPaymentsFileView, self).get_form_kwargs()
+#         kwargs['user'] = self.request.user
+# #         assert False
+#         return kwargs
+# 
+#     def form_valid(self, form):
+#         payments = form.get_payments()
+#         self.request.session['payments'] = payments
+#         logger.info(self.request.session.get('payments'))
+#         username = form.user
+#         self.request.session['username'] = username
 #         assert False
-        return kwargs
-
-    def form_valid(self, form):
-        payments = form.get_payments()
-        self.request.session['payments'] = payments
-        logger.info(self.request.session.get('payments'))
-        username = form.user
-        self.request.session['username'] = username
-        assert False
-        return HttpResponseRedirect(
-            reverse_lazy('file', kwargs={'username': username,
-                                         'payments': payments}))
-
-    # XXX TODO *args, **kwargs might cause problems?
-    def post(self, *args, **kwargs):
-        form = LoadPaymentsFileForm(request.POST)
-        if form.is_valid():
-            payments = form.get_payments()
-            self.request.session['payments'] = payments
-            logger.info(self.request.session.get('payments'))
-            username = form.user
-            self.request.session['username'] = username
-            assert False
-        return HttpResponseRedirect(
-            reverse_lazy('file', kwargs={'username': username,
-                                         'payments': payments}))
-
-    # This is how you decorate class see:
-    # https://docs.djangoproject.com/en/1.5/topics/class-based-views/intro/
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(LoadPaymentsFileView, self).dispatch(*args, **kwargs)
+#         return HttpResponseRedirect(
+#             reverse_lazy('file', kwargs={'username': username,
+#                                          'payments': payments}))
+# 
+#     # XXX TODO *args, **kwargs might cause problems?
+#     def post(self, *args, **kwargs):
+#         form = LoadPaymentsFileForm(request.POST)
+#         if form.is_valid():
+#             payments = form.get_payments()
+#             self.request.session['payments'] = payments
+#             logger.info(self.request.session.get('payments'))
+#             username = form.user
+#             self.request.session['username'] = username
+#             assert False
+#         return HttpResponseRedirect(
+#             reverse_lazy('file', kwargs={'username': username,
+#                                          'payments': payments}))
+# 
+#     # This is how you decorate class see:
+#     # https://docs.djangoproject.com/en/1.5/topics/class-based-views/intro/
+#     @method_decorator(login_required)
+#     def dispatch(self, *args, **kwargs):
+#         return super(LoadPaymentsFileView, self).dispatch(*args, **kwargs)
 
 
 # login_required
