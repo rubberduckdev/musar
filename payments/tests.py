@@ -156,7 +156,7 @@ Le diagram
         #http://stackoverflow.com/questions/151199/how-do-i-calculate-number-of-days-betwen-two-dates-using-python
         #http://docs.python.org/2/library/datetime.html
 
-        self.coproration_1 = Corporation.objects.create(
+        self.corporation_1 = Corporation.objects.create(
             cid="fsf"
         )
 
