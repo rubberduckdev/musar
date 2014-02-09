@@ -3,6 +3,8 @@ from payments.models import Payment
 
 
 class PaymentsTable(tables.Table):
+    days_late = columns.TemplateColumn('{{ record.lateness_days }}')
+    days_credit = columns.TemplateColumn('{{ record.credit_days }}')
     class Meta:
         model = Payment
         exclude = ('owner', 'created_at')
@@ -19,6 +21,8 @@ class PaymentsTable(tables.Table):
             'supply_date',
             'due_date',
             'pay_date',
+            'days_late',
+            'days_credit',
         )
         attrs = {"class": "table"}
 

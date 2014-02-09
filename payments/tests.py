@@ -2,116 +2,48 @@ from django.test import TestCase
 from django.contrib.auth.models import User#, UserProfile
 from datetime import timedelta
 from django.utils.datetime_safe import datetime, date
+from random import randint, choice
 # from django.utils.datetime_safe import datetime as  django_datetime
 from payments.models import (
     Corporation, Payment, regulation_due_date
 )
 
 
-# Create your tests here.
+def random_date(start, end):
+    days=randint(0, (end - start).days)
+    return start + timedelta(days=days)   
 
-#class CompanyTest(TestCase):
-#
-#    def test_create_company(self):
-#        Company.objects.create(
-#            cid='123',
-#            name="Hasadna",
-#            url="http://www.hasadna.org.il/",
-#            email="info@hasadna.org.il",
-#
-#        )
-#
-#        self.assertEqual(1, Company.objects.count())
-#
-#        Company.objects.create(
-#            cid='abc',
-#            name="Avi",
-#            url="http://www.avi.co.il/",
-#            email="info@avi.co.il",
-#        )
-#        self.assertEqual(
-#            2, Company.objects.count()
-#        )
-#
-#        # Test retrieve companies by name
-#        self.assertEqual(1, Company.objects.filter(name='Hasadna').count())
-#        self.assertEqual(1, Company.objects.filter(name='Avi').count())
-#        self.assertEqual(0, Company.objects.filter(name='Moshe').count())
-#        # TODO: how do I retrieve the preferences for company2
-#
-#
-#class PaymentTest(TestCase):
-#
-#    def setUp(self):
-#        self.company1 = Company.objects.create(
-#            cid='sc1',
-#            name="FSF",
-#            url="http://www.fsf.org/",
-#            email="info@fsf.org",
-#        )
-#        self.company2 = Company.objects.create(
-#            cid='sc2',
-#            name="Yossi",
-#            url="http://www.yossi.co.il/",
-#            email="info@yossi.co.il",
-#        )
-#
-#    def test_create_payment(self):
-#        Payment.objects.create(
-#            buyer=self.company1,
-#            seller=self.company2,
-#            dueDate=datetime.now(),
-#            orderdate=datetime.now(),
-#            input_user=self.company1,
-#        )
-#        self.assertEqual(1, Payment.objects.count())
-#
-#    #       Test in and out payments counts before and after creating a
-#    #       payment
-#    def test_company_payements_associations(self):
-#
-#        self.assertEqual(
-#            0, self.company1.out_payments.count(),
-#        )
-#        self.assertEqual(
-#            0, self.company2.out_payments.count(),
-#        )
-#        self.assertEqual(
-#            0, self.company1.in_payments.count(),
-#        )
-#        self.assertEqual(
-#            0, self.company2.in_payments.count(),
-#        )
-#
-#        self.assertEqual(0, Payment.objects.count())
-#
-#        Payment.objects.create(
-#            buyer=self.company1,
-#            seller=self.company2,
-#            dueDate=datetime.now(),
-#            orderdate=datetime.now(),
-#            input_user=self.company1,
-#        )
-#        self.assertEqual(
-#            1, Payment.objects.count())
-#
-#        self.assertEqual(
-#            1, self.company1.out_payments.count(),
-#        )
-#
-#        self.assertEqual(
-#            0, self.company2.out_payments.count(),
-#        )
-#
-#        self.assertEqual(
-#            0, self.company1.in_payments.count(),
-#        )
-#
-#        self.assertEqual(
-#            1, self.company2.in_payments.count(),
-#        )
-#
-#
+def generate_payment(user, corporation, is_late, is_extra_credit):
+    
+    result = {}
+    result['late_days'] = 0
+    result['extra_credit_days'] = 0
+    result['is_late'] = is_late
+    result['is_extra_credit'] = is_extra_credit
+    
+    if (is_late):
+        result['late_days'] = randint(1,99)
+    if (is_extra_credit):
+       result['extra_credit_days'] = randint(1,60)
+    start = datetime.strptime('1/1/2010', '%d/%m/%Y')
+    end = datetime.strptime('1/1/2014', '%d/%m/%Y')
+    supply_date = random_date(start, end)
+    due_date = regulation_due_date(supply_date) + \
+        timedelta(days=result['extra_credit_days'])
+    pay_date = due_date + timedelta(days=result['late_days']-result['extra_credit_days'])
+    
+    result['payment'] = Payment.objects.create(
+        corporation=corporation,
+        owner=user,
+        #amount=csv_model.amount,
+        #title=csv_model.title,
+        due_date=due_date,
+        supply_date=supply_date,
+        #order_date=d1,
+        pay_date=pay_date
+    )
+    return result
+  
 
 class CorporationTests(TestCase):
     
@@ -244,6 +176,8 @@ class CorporationTests(TestCase):
         self.assertEqual(self.c1.late_payments_count, 2)
         self.assertEqual(self.c2.late_payments_count, 1)
         self.assertEqual(Payment.objects.count(), 5)
+        self.p4.delete()
+        self.p5.delete()
         
     def test_lateness_avarege(self):
         self.assertEqual(self.c1.lateness_average, (self.late_days_1 +
@@ -260,14 +194,97 @@ class CorporationTests(TestCase):
             self.credit_days_2)/2
         )
         self.assertEqual(self.c2.credit_average, self.credit_days_3)
+ 
+        
+class UsersProfileTests(TestCase):
+    def setUp(self):
+        self.user_1 = User.objects.create(username='user1')
+        self.user_2 = User.objects.create(username='user2')
+        self.user_3 = User.objects.create(username='user3')
+        self.corporation_1 = Corporation.objects.create(
+            cid="corporation_1", name='corporation_1'
+        )
+        self.corporation_2 = Corporation.objects.create(
+            cid="corporation_2", name='corporation_2'
+        )
+        self.payment_details = []
+    
+    def test_user_payments_count(self):
+        
+        payments_count_1 = 10
+        self.assertEqual(self.user_1.get_profile().payments_count, 0)
+        self.assertEqual(self.user_2.get_profile().payments_count, 0)
+        for i in xrange(0,payments_count_1):
+            is_late = choice([True, False])
+            is_extra_credit = choice([True, False])
+            self.payment_details.append(generate_payment(self.user_1, 
+                self.corporation_1, 
+                is_late=is_late, 
+                is_extra_credit=is_extra_credit)
+            )
+                                        
+        payments_count_2 = 15
+        self.assertEqual(self.user_1.get_profile().payments_count, payments_count_1)
+        self.assertEqual(self.user_2.get_profile().payments_count, 0)
+        for i in xrange(payments_count_1,payments_count_1+payments_count_2):
+            self.payment_details.append(generate_payment(self.user_2, 
+                self.corporation_1, 
+                is_late=choice([True, False]), 
+                is_extra_credit=choice([True, False]))
+            )
+        self.assertEqual(self.user_1.get_profile().payments_count, payments_count_1)
+        self.assertEqual(self.user_2.get_profile().payments_count, payments_count_2)
+        
+    def test_user_payements_late_payments_count(self):
+        payments_count = 10
+        late_counter = 0
+        for i in xrange(0, payments_count):
+            is_late=choice([True, False])
+            print "is_late: ", is_late
+            if (is_late):
+                late_counter += 1
+            self.payment_details.append(generate_payment(self.user_1, 
+                self.corporation_1, 
+                is_late=is_late, 
+                is_extra_credit=choice([True, False]))
+            )
+            assert self.payment_details[i]['is_late'] == is_late
+        print "late_counter: ", late_counter
+        self.assertEqual(self.user_1.get_profile().late_payments_count, late_counter)
+        
+    def test_user_lateness_average(self):
+        payments_count = 20
+        late_days_counter = 0
+        for i in xrange(0, payments_count):
+            is_late=choice([True, False])
+            payment = generate_payment(self.user_3, 
+                self.corporation_1, 
+                is_late=is_late, 
+                is_extra_credit=choice([True, False])
+            )
+            self.payment_details.append(payment)
+            late_days_counter = late_days_counter + payment['late_days']
+        lateness_average = late_days_counter/payments_count
+        self.assertEqual(self.user_3.get_profile().lateness_average, lateness_average)
+        
+        
+    def tearDown(self):
+        for payment in self.payment_details:
+            payment['payment'].delete()
+        self.corporation_1.delete()
+        self.corporation_2.delete()
+        self.user_1.delete()
+        self.user_2.delete()
+        self.user_3.delete()
         
 
+        
 class PaymentsTests(TestCase):
     
     def setUp(self):
         self.user_1 = User.objects.create(username='user1')
         self.corporation_1 = Corporation.objects.create(
-            cid="PaymentsTests"
+            cid="PaymentsTests", name='PaymentsTests'
         )
 
 

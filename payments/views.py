@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse_lazy
 from django.http import request
 from django.shortcuts import render_to_response
@@ -82,8 +83,17 @@ class HomeView(SingleTableView):
 
 @login_required
 def statistics(a_request, username):
-    return render(a_request, 'payments/statistics.html', {'username': username})
-
+	try:
+		# consider taking username from the request
+		user = User.objects.get(username = username)
+		profile = user.get_profile()
+		assert user != None
+		assert profile != None
+		return render(a_request, 'payments/statistics.html', 
+			{'user': user, 'user_profile': profile}
+		)
+	except User.DoesNotExist:
+		return HttpResponse("Invalid username")
 
 @login_required
 def settings(a_request, username):
@@ -104,25 +114,6 @@ class PaymentsList(SingleTableView):
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super(PaymentsList, self).dispatch(*args, **kwargs)
-
-
-# class AddPaymentsList(SingleTableView):
-#     model = Payment
-#     template_name = 'payments/payments.html'
-#     table_class = PaymentsTable
-# 
-#     def __init__(self, *args, **kwargs):
-#         super(AddPaymentsList, self).__init__(*args, **kwargs)
-#         self.csv_payments = kwargs['payments']
-# 
-#     def get_queryset(self):
-#         return self.csv_payments
-# 
-#     # This is how you decorate class see:
-#     # https://docs.djangoproject.com/en/1.5/topics/class-based-views/intro/
-#     @method_decorator(login_required)
-#     def dispatch(self, *args, **kwargs):
-#         return super(PaymentsList, self).dispatch(*args, **kwargs)
 
 
 def load_payments_from_file_view(a_request, username):

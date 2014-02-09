@@ -118,7 +118,7 @@ class Payment(models.Model):
     )
     owner = models.ForeignKey(
         User,
-        related_name='payments',
+#         related_name='payments',
         verbose_name=_('Created By'),
         # help_text=_('Who is getting this payment'),
     )
@@ -206,11 +206,48 @@ class UserProfile(models.Model):
     def __str__(self):  
           return "%s's profile" % self.user  
 
-def create_user_profile(sender, instance, created, **kwargs):  
-    if created:  
-       profile, created = UserProfile.objects.get_or_create(user=instance)  
+    def create_user_profile(sender, instance, created, **kwargs):  
+        if created:  
+           profile, created = UserProfile.objects.get_or_create(user=instance)  
+           
+    @property
+    def payments_count(self):
+        return self.user.payment_set.count()
+    
+    @property
+    def total_late_days(self):
+        days = 0
+        for payment in self.user.payment_set.all():
+            days += payment.lateness_days
+        return days
+    
+    @property
+    def late_payments_count(self):
+        late_payments = [payment for payment in self.user.payment_set.all() \
+            if payment.lateness_days > 0]
+        return len(late_payments)
+    
+    @property
+    def lateness_average(self):
+        if self.payments_count > 0:
+            return self.total_late_days/self.payments_count
+        return 0
+    
+    @property
+    def total_credit_days(self):
+        days = 0
+        for payment in self.user.payment_set.all():
+            days += payment.credit_days
+        return days
+        
+    @property
+    def credit_average(self):
+        if self.payments_count > 0:
+            return self.total_credit_days/self.payments_count
+        return 0
 
-post_save.connect(create_user_profile, sender=User) 
+
+    post_save.connect(create_user_profile, sender=User) 
         
         
 
