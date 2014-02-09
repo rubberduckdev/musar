@@ -80,3 +80,4 @@ docs/_build/
 .pydevproject
 .gitignore
 db.sqlite3
+musar/local_settings.py
