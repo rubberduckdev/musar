@@ -12,15 +12,25 @@
                 <div class="panel-heading" dir="rtl">
                     <h3 class="panel-title">סה"כ  </h3>
                 </div>
-                <span class="count"><h2 align="center">1533 תשלומים </h2></span>
+                <span class="count"><h2 align="center">{{ corporation.payments_count }} תשלומים </h2></span>
             </div>
         </div>
+        <div class="col-sm-3">
+            <div class="panel panel-info">
+                <div class="panel-heading" dir="rtl">
+                    <h3 class="panel-title"> דרוג</h3>
+                </div>
+                <span class="count"><h2 align="center">מקום XX </h2></span>
+            </div>
+        </div>
+    </div>
+    <div class='row'>
         <div class="col-sm-3">
             <div class="panel panel-warning">
                 <div class="panel-heading" dir="rtl">
                     <h3 class="panel-title">איחור ממוצע לתשלום</h3>
                 </div>
-                <span class="count"><h2 align="center">4 ימים</h2></span>
+                <span class="count"><h2 align="center">{{ corporation.lateness_average }} ימים</h2></span>
             </div>
         </div>
         <div class="col-sm-3">
@@ -28,15 +38,15 @@
                 <div class="panel-heading" dir="rtl">
                     <h3 class="panel-title">ממוצע אשראי לתשלום</h3>
                 </div>
-                <span class="count"><h2 align="center">45 ימים</h2></span>
+                <span class="count"><h2 align="center">{{ corporation.credit_average }} ימים</h2></span>
             </div>
         </div>
         <div class="col-sm-3">
             <div class="panel panel-warning">
                 <div class="panel-heading" dir="rtl">
-                    <h3 class="panel-title"> דרוג</h3>
+                    <h3 class="panel-title">מדד איפה ואיפה</h3>
                 </div>
-                <span class="count"><h2 align="center">מקום 34 </h2></span>
+                <span class="count"><h2 align="center">גבוה</h2></span>
             </div>
         </div>
     </div>

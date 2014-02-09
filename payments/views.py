@@ -269,14 +269,5 @@ def search(a_request):
 
 def corporation_detail(a_request, corporation):
     obj = get_object_or_404(Corporation, name__icontains=corporation)
+    assert obj != None
     return render(a_request, 'payments/company.html', {'corporation': obj})
-
-
-# class CorporationView(DetailView):
-#     model = Corporation
-#     template_name = 'payments/company.html'
-#     # context_object_name = 'corporation'
-#
-#     def get_object(self, *args, **kwargs):
-#         return get_object_or_404(Corporation,
-#             name__icontains=kwargs['pk'])
