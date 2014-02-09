@@ -72,7 +72,7 @@ class HomeView(SingleTableView):
         return context
 
     def get_queryset(self):
-        return self.request.user.payments.all()
+        return self.request.user.payment_set.all()
 
     #  This is how you decorate class see:
     #  https://docs.djangoproject.com/en/1.5/topics/class-based-views/intro/
