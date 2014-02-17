@@ -14,8 +14,7 @@ from django.views.generic.edit import CreateView, FormView
 from django_tables2 import SingleTableView
 from payments.forms import AddPaymentForm, LoadFileForm
 from payments.models import Corporation, Payment
-from payments.tables import PaymentsTable, PaymentsPartialTable
-#from django.core.files.uploadedfile import SimpleUploadedFile
+from payments.tables import PaymentsTable, PaymentsPartialTable, CorporationTable
 from django.template import RequestContext
 import logging
 from payments.csv_models import PaymentCsvModel
@@ -52,17 +51,16 @@ class HomeView(SingleTableView):
 
     def __init__(self, user=None, *args, **kwargs):
         super(HomeView, self).__init__(*args, **kwargs)
-        self._user = user
+        self.user = user
 
     def get_context_data(self, **kwargs):
         """ Adds tables of late and near due payments to the context
         """
-        # filter overview payments
         context = super(HomeView, self).get_context_data(**kwargs)
-        late_payments_data = Payment.objects.filter(
-            due_date__lt=datetime.today)
-        context['table'] = PaymentsPartialTable(late_payments_data)
-        # filter payments due in 6 days
+		# add overview payments
+        context['table'] = \
+        	PaymentsPartialTable(self.request.user.get_profile().overdue_payments)
+        # add payments due in 6 days
         startdate = datetime.today()
         enddate = startdate + timedelta(days=6)
         neardue_payments_data = Payment.objects.filter(
@@ -70,9 +68,6 @@ class HomeView(SingleTableView):
         context['table_neardue_payments'] = PaymentsPartialTable(
             neardue_payments_data)
         return context
-
-    def get_queryset(self):
-        return self.request.user.payment_set.all()
 
     #  This is how you decorate class see:
     #  https://docs.djangoproject.com/en/1.5/topics/class-based-views/intro/
@@ -98,6 +93,56 @@ def statistics(a_request, username):
 @login_required
 def settings(a_request, username):
     return render(a_request, 'payments/settings.html', {'username': username})
+   
+@login_required 
+def compare_view(a_request):
+	c = get_object_or_404(Corporation, name__icontains=a_request.GET.get('corporation'))
+	user = User.objects.get(username = a_request.user.username)
+	profile = user.get_profile()
+	assert c != None
+	return render(a_request, 'payments/compare_corporation.html', 
+		{'user': user, 
+		'corporation': c, 
+		'user_profile': profile}
+	)
+
+
+class MyCorporationsList(SingleTableView):
+	model = Corporation
+	template_name = 'payments/my_corporations.html'
+	table_class = CorporationTable
+	
+	def get_queryset(self):
+		# filter for current user
+		return Corporation.objects.all()
+
+    # This is how you decorate class see:
+    # https://docs.djangoproject.com/en/1.5/topics/class-based-views/intro/
+	@method_decorator(login_required)
+	def dispatch(self, *args, **kwargs):
+		return super(MyCorporationsList, self).dispatch(*args, **kwargs)
+
+	
+@login_required   
+def my_corporations_view(a_request, username):
+	if (a_request.method==POST):
+		corporation = a_request.POST.get('corporation')
+		return HttpResponseRedirect(reverse_lazy('payments',
+        		kwargs={'username': username, 'corporation': corporation})
+    )
+
+	try:
+		# consider taking username from the request
+		user = User.objects.get(username = username)
+		profile = user.get_profile()
+		corporation = Corporation.objects.all()[0]
+		payments_count = user.get_profile().payments_count_by_corporation(corporation)
+		return render(a_request, 'payments/my_corporations.html', 
+			{'username': username, 'corporation': corporation, 'payments_count': payments_count})
+	except User.DoesNotExist:
+		return HttpResponse("Invalid username")
+	except Corporation.DoesNotExist:
+		return HttpResponse("Corporation not found")
 
 
 # login_required
@@ -105,9 +150,14 @@ class PaymentsList(SingleTableView):
     model = Payment
     template_name = 'payments/payments.html'
     table_class = PaymentsTable
-
+    
     def get_queryset(self):
-        return Payment.objects.filter(owner=self.request.user)
+        if self.request.method == POST:
+            corporation = self.request.POST.get('corporation')
+            payments_list = [payment for payment in self.request.user.payment_set.all() if payment.coporation__eq(corporation)]
+        else:
+            payments_list = [payment for payment in self.request.user.payment_set.all()]
+    	return payments_list
 
     # This is how you decorate class see:
     # https://docs.djangoproject.com/en/1.5/topics/class-based-views/intro/
@@ -229,6 +279,7 @@ class PaymentCreate(CreateView):
     )
 
     def form_valid(self, form):
+    	# set the hidden field to current user
         form.instance.created_by = self.request.user
         form.instance.owner = self.request.user
         return super(PaymentCreate, self).form_valid(form)

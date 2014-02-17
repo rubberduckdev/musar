@@ -1,7 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth.models import User#, UserProfile
-from datetime import timedelta
-from django.utils.datetime_safe import datetime, date
+from datetime import timedelta, date, datetime
 from random import randint, choice
 # from django.utils.datetime_safe import datetime as  django_datetime
 from payments.models import (
@@ -13,23 +12,32 @@ def random_date(start, end):
     days=randint(0, (end - start).days)
     return start + timedelta(days=days)   
 
-def generate_payment(user, corporation, is_late, is_extra_credit):
+def generate_payment(user, corporation, is_late, is_extra_credit, is_neardue):
     
     result = {}
     result['late_days'] = 0
     result['extra_credit_days'] = 0
     result['is_late'] = is_late
     result['is_extra_credit'] = is_extra_credit
+    result['is_neardue'] = is_neardue
+    
+    assert(not (is_late and is_neardue))
     
     if (is_late):
         result['late_days'] = randint(1,99)
     if (is_extra_credit):
        result['extra_credit_days'] = randint(1,60)
+        
     start = datetime.strptime('1/1/2010', '%d/%m/%Y')
     end = datetime.strptime('1/1/2014', '%d/%m/%Y')
     supply_date = random_date(start, end)
-    due_date = regulation_due_date(supply_date) + \
-        timedelta(days=result['extra_credit_days'])
+    if (is_neardue):
+        start = date.today()
+        end = start + timedelta(days=randint(0,6))
+        due_date = random_date(start, end)
+    else:
+        due_date = regulation_due_date(supply_date) + \
+            timedelta(days=result['extra_credit_days'])
     pay_date = due_date + timedelta(days=result['late_days']-result['extra_credit_days'])
     
     result['payment'] = Payment.objects.create(
@@ -42,6 +50,7 @@ def generate_payment(user, corporation, is_late, is_extra_credit):
         #order_date=d1,
         pay_date=pay_date
     )
+    result['payment'].save()
     return result
   
 
@@ -147,7 +156,7 @@ class CorporationTests(TestCase):
     
     def test_late_payments_count(self):
         
-        """ add on-time payments 
+        """ add on-time payments_detail 
         """
         supply_date = date(2014, 10, 15)
         due_date = regulation_due_date(supply_date)
@@ -207,70 +216,113 @@ class UsersProfileTests(TestCase):
         self.corporation_2 = Corporation.objects.create(
             cid="corporation_2", name='corporation_2'
         )
-        self.payment_details = []
+        self.payments_detail = []
     
-    def test_user_payments_count(self):
+   
+    def test_near_due_payments(self):
+        payments_count = 10
+        neardue_list = []
+        for i in xrange(0,payments_count):
+            is_late = choice([True, False])
+            is_extra_credit = choice([True, False])
+            if is_late:
+                is_neardue = False
+            else:
+                is_neardue = choice([True, False])
+            user = choice([self.user_1, self.user_2])
+            corporation = choice([self.corporation_1, self.corporation_2])
+            p_detail = generate_payment(user, 
+                corporation, 
+                is_late=is_late, 
+                is_extra_credit=is_extra_credit,
+                is_neardue=is_neardue
+            )
+            p_detail['payment'].save()
+            self.payments_detail.append(p_detail)
+            if user == self.user_1 and is_neardue:
+                p = p_detail['payment']
+                neardue_list.append(p)
+        print "neardue_list", neardue_list
+        neardue_payments = self.user_1.get_profile().neardue_payments
+        print "neardue_payments", neardue_payments
+        self.assertEqual(neardue_list, neardue_payments)
         
+    def test_overdue_payments(self):
+        
+        self.assertTrue(Payment.objects.count() == 0)
+        payments_count_1 = 10
+        overdue_payments_count = len(self.user_1.get_profile().overdue_payments)
+        self.assertEqual(overdue_payments_count, 0)
+        overdue_payments_count = len(self.user_2.get_profile().overdue_payments)
+        self.assertEqual(overdue_payments_count, 0)
+        late_list = []
+        for i in xrange(0,payments_count_1):
+            is_late = choice([True, False])
+            is_extra_credit = choice([True, False])
+            if is_late:
+                is_neardue = False
+            else:
+                is_neardue = choice([True, False])
+            user = choice([self.user_1, self.user_2])
+            corporation = choice([self.corporation_1, self.corporation_2])
+            p_detail = generate_payment(user, 
+                corporation, 
+                is_late=is_late, 
+                is_extra_credit=is_extra_credit,
+                is_neardue=is_neardue
+            )
+            p_detail['payment'].save()
+            self.payments_detail.append(p_detail)
+            if user == self.user_1 and is_late:
+                p = p_detail['payment']
+                late_list.append(p)
+        self.assertEqual(late_list, self.user_1.get_profile().overdue_payments)
+                
+                                
+        
+    def test_user_payments_count(self):
+         
         payments_count_1 = 10
         self.assertEqual(self.user_1.get_profile().payments_count, 0)
         self.assertEqual(self.user_2.get_profile().payments_count, 0)
         for i in xrange(0,payments_count_1):
             is_late = choice([True, False])
             is_extra_credit = choice([True, False])
-            self.payment_details.append(generate_payment(self.user_1, 
+            if is_late:
+                is_neardue = False
+            else:
+                is_neardue = choice([True, False])
+            self.payments_detail.append(generate_payment(self.user_1, 
                 self.corporation_1, 
                 is_late=is_late, 
-                is_extra_credit=is_extra_credit)
+                is_extra_credit=is_extra_credit,
+                is_neardue=is_neardue)
             )
-                                        
+                                         
         payments_count_2 = 15
         self.assertEqual(self.user_1.get_profile().payments_count, payments_count_1)
         self.assertEqual(self.user_2.get_profile().payments_count, 0)
+        is_late=choice([True, False])
+        if is_late:
+            is_neardue = False
+        else:
+            is_neardue = choice([True, False])
         for i in xrange(payments_count_1,payments_count_1+payments_count_2):
-            self.payment_details.append(generate_payment(self.user_2, 
+            self.payments_detail.append(generate_payment(self.user_2, 
                 self.corporation_1, 
-                is_late=choice([True, False]), 
-                is_extra_credit=choice([True, False]))
+                is_late=is_late, 
+                is_extra_credit=choice([True, False]),
+                is_neardue=is_neardue)
             )
         self.assertEqual(self.user_1.get_profile().payments_count, payments_count_1)
         self.assertEqual(self.user_2.get_profile().payments_count, payments_count_2)
         
-    def test_user_payements_late_payments_count(self):
-        payments_count = 10
-        late_counter = 0
-        for i in xrange(0, payments_count):
-            is_late=choice([True, False])
-            print "is_late: ", is_late
-            if (is_late):
-                late_counter += 1
-            self.payment_details.append(generate_payment(self.user_1, 
-                self.corporation_1, 
-                is_late=is_late, 
-                is_extra_credit=choice([True, False]))
-            )
-            assert self.payment_details[i]['is_late'] == is_late
-        print "late_counter: ", late_counter
-        self.assertEqual(self.user_1.get_profile().late_payments_count, late_counter)
-        
-    def test_user_lateness_average(self):
-        payments_count = 20
-        late_days_counter = 0
-        for i in xrange(0, payments_count):
-            is_late=choice([True, False])
-            payment = generate_payment(self.user_3, 
-                self.corporation_1, 
-                is_late=is_late, 
-                is_extra_credit=choice([True, False])
-            )
-            self.payment_details.append(payment)
-            late_days_counter = late_days_counter + payment['late_days']
-        lateness_average = late_days_counter/payments_count
-        self.assertEqual(self.user_3.get_profile().lateness_average, lateness_average)
-        
-        
     def tearDown(self):
-        for payment in self.payment_details:
-            payment['payment'].delete()
+        print "in tearDown" 
+        for detail in self.payments_detail:
+           p = detail['payment']
+           p.delete()
+        assert len(Payment.objects.all()) == 0
         self.corporation_1.delete()
         self.corporation_2.delete()
         self.user_1.delete()
@@ -547,7 +599,6 @@ time
             #order_date=d1,
             pay_date=pay_date
         )
-        print our_payment.credit_days
         self.assertEqual(our_payment.credit_days, credit_days)
     
     def test_credit_when_payment_before_supply_time(self):

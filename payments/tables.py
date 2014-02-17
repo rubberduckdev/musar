@@ -1,7 +1,36 @@
 from django_tables2 import tables, columns
-from payments.models import Payment
+from django_tables2.utils import A  # alias for Accessor
+from payments.models import Payment, Corporation
 
 
+
+class CorporationTable(tables.Table):
+    days_late_average = columns.TemplateColumn('{{ record.lateness_average }}')
+    days_credit_average = columns.TemplateColumn('{{ record.credit_average }}')
+    name = columns.LinkColumn('compare_corporation', kwargs={'corporation': A('name')})
+#                               , 
+#         kwargs={'corporation': A('name')})
+#     name = columns.TemplateColumn(
+#         accessor='corporation.name',
+#         verbose_name='Name',
+#         template_name='payments/corporation_link.html',
+#         orderable=False
+#     )
+    class Meta:
+        model = Corporation
+  
+        exclude = (
+            'url',
+            'email',
+        )    
+        sequence = (
+            'cid',
+            'name',
+            'days_late_average',
+            'days_credit_average',
+        )
+        attrs = {"class": "table"}   
+        
 class PaymentsTable(tables.Table):
     days_late = columns.TemplateColumn('{{ record.lateness_days }}')
     days_credit = columns.TemplateColumn('{{ record.credit_days }}')

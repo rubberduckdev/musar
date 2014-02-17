@@ -1,9 +1,9 @@
-from datetime import timedelta
+from datetime import timedelta, date, datetime
 
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.utils.datetime_safe import datetime, date
+# from django.utils.datetime_safe import datetime, date
 from django.utils.translation import ugettext as _
 from django.db.models.signals import post_save
 import json
@@ -67,6 +67,8 @@ class Corporation(models.Model):
     
     @property
     def lateness_average(self):
+        if self.payments_count == 0:
+            return 0
         return self.total_late_days/self.payments_count
     
     @property
@@ -78,6 +80,8 @@ class Corporation(models.Model):
         
     @property
     def credit_average(self):
+        if self.payments_count == 0:
+            return 0
         return self.total_credit_days/self.payments_count
         
 
@@ -144,7 +148,7 @@ class Payment(models.Model):
         # help_text=_('The date the goods or services where delivared'),
     )
     order_date = models.DateField(
-        default=datetime.now,
+        default=date.today(),
         verbose_name=_('Order Date'),
         # help_text=_('The date the supply was ordered'),
         null=True,
@@ -158,7 +162,7 @@ class Payment(models.Model):
     )
 
     def __unicode__(self):
-        return self.title
+        return self.title + " " + self.owner.username + " " + self.corporation.name + " " + str(self.lateness_days) + " " + str(self.supply_date) +  " " + str(self.due_date) + " " + str(self.pay_date) 
 
     def get_absolute_url(self):
         return reverse('add_payments', kwargs={'pk': self.pk})
@@ -200,15 +204,46 @@ class Payment(models.Model):
         
 
 class UserProfile(models.Model):  
-    user = models.OneToOneField(User)  
-    #other fields here
+    user = models.OneToOneField(User) 
+    neardue_days = models.DecimalField(default=6, decimal_places=0, max_digits=2) 
 
     def __str__(self):  
           return "%s's profile" % self.user  
 
     def create_user_profile(sender, instance, created, **kwargs):  
         if created:  
-           profile, created = UserProfile.objects.get_or_create(user=instance)  
+           profile, created = UserProfile.objects.get_or_create(user=instance)
+    
+    @property
+    def overdue_payments(self):
+        late_payments = [
+            payment for payment in self.user.payment_set.all() 
+                if payment.lateness_days > 0 
+        ]
+        return late_payments
+         
+    @property
+    def neardue_payments(self):
+        neardue_payments = []
+        for payment in self.user.payment_set.all():
+            days_till_pay = (date.today() - payment.due_date).days
+            print "days", days_till_pay
+            if days_till_pay > 0 and days_till_pay <= 6:
+                print "APPEND", payment.due_date
+                neardue_payments.append(payment)
+            
+#         neardue_payments = Payment.objects.filter(due_date__range=(startdate, enddate))
+#         neardue_payments = Payment.objects.filter(due_date__range=(startdate, enddate))
+#                                                   ,
+#             due_date__range=[startdate, enddate])
+ 
+        return neardue_payments
+
+    @property       
+    def payments_count_by_corporation(self, corporation):
+        payments_list = [payment for payment in self.user.payment_set.all() \
+            if payment.corporation == corporation]
+        return len(payments_list)
            
     @property
     def payments_count(self):
@@ -245,7 +280,6 @@ class UserProfile(models.Model):
         if self.payments_count > 0:
             return self.total_credit_days/self.payments_count
         return 0
-
 
     post_save.connect(create_user_profile, sender=User) 
         
