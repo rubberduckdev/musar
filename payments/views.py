@@ -95,16 +95,20 @@ def settings(a_request, username):
     return render(a_request, 'payments/settings.html', {'username': username})
    
 @login_required 
-def compare_view(a_request):
-	c = get_object_or_404(Corporation, name__icontains=a_request.GET.get('corporation'))
-	user = User.objects.get(username = a_request.user.username)
-	profile = user.get_profile()
-	assert c != None
-	return render(a_request, 'payments/compare_corporation.html', 
-		{'user': user, 
-		'corporation': c, 
-		'user_profile': profile}
-	)
+def compare_view(a_request, corporation):
+    corporation_get = a_request.GET['corporation']
+    corporation_post = a_request.POST.get('corporation')
+    assert False
+    c = get_object_or_404(Corporation, name__eq=corporation)
+    assert False
+    user = User.objects.get(username=a_request.user.username)
+    profile = user.get_profile()
+    assert c != None
+    return render(a_request, 'payments/compare_corporation.html', 
+    	{'user': user, 
+    	'corporation': c, 
+    	'user_profile': profile}
+    )
 
 
 class MyCorporationsList(SingleTableView):
@@ -125,7 +129,7 @@ class MyCorporationsList(SingleTableView):
 	
 @login_required   
 def my_corporations_view(a_request, username):
-	if (a_request.method==POST):
+	if a_request.method == 'POST':
 		corporation = a_request.POST.get('corporation')
 		return HttpResponseRedirect(reverse_lazy('payments',
         		kwargs={'username': username, 'corporation': corporation})
@@ -152,7 +156,7 @@ class PaymentsList(SingleTableView):
     table_class = PaymentsTable
     
     def get_queryset(self):
-        if self.request.method == POST:
+        if self.request.method == 'POST':
             corporation = self.request.POST.get('corporation')
             payments_list = [payment for payment in self.request.user.payment_set.all() if payment.coporation__eq(corporation)]
         else:

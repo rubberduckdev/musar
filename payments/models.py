@@ -95,12 +95,17 @@ class PaymentType(object):
         (OUT, 'Out'),
     )
 
+def get_max_legal_credit_days(supply_date):
+    # TODO: implement the real computation which is based on supply_date shotef+
+    return MAX_LEGAL_CREDIT_DAYS
 
 def regulation_due_date(supply_date):
     """ Due date might be latter than regulations premits. In such case,
         the latest date regulation allow is returned. 
     """
-    max_legal_credit_date = supply_date + timedelta(days=MAX_LEGAL_CREDIT_DAYS)
+    max_legal_credit_date = supply_date + \
+        timedelta(days=get_max_legal_credit_days(supply_date))
+        
     return max_legal_credit_date
 
 
@@ -226,10 +231,9 @@ class UserProfile(models.Model):
     def neardue_payments(self):
         neardue_payments = []
         for payment in self.user.payment_set.all():
-            days_till_pay = (date.today() - payment.due_date).days
+            days_till_pay = (payment.due_date - date.today()).days
             print "days", days_till_pay
-            if days_till_pay > 0 and days_till_pay <= 6:
-                print "APPEND", payment.due_date
+            if days_till_pay >= 0 and days_till_pay <= 6:
                 neardue_payments.append(payment)
             
 #         neardue_payments = Payment.objects.filter(due_date__range=(startdate, enddate))

@@ -4,7 +4,7 @@ from datetime import timedelta, date, datetime
 from random import randint, choice
 # from django.utils.datetime_safe import datetime as  django_datetime
 from payments.models import (
-    Corporation, Payment, regulation_due_date
+    Corporation, Payment, regulation_due_date, get_max_legal_credit_days
 )
 
 
@@ -12,34 +12,38 @@ def random_date(start, end):
     days=randint(0, (end - start).days)
     return start + timedelta(days=days)   
 
-def generate_payment(user, corporation, is_late, is_extra_credit, is_neardue):
+def generate_payment(user, corporation, is_late, is_neardue):
     
     result = {}
     result['late_days'] = 0
-    result['extra_credit_days'] = 0
     result['is_late'] = is_late
-    result['is_extra_credit'] = is_extra_credit
     result['is_neardue'] = is_neardue
     
     assert(not (is_late and is_neardue))
     
     if (is_late):
         result['late_days'] = randint(1,99)
-    if (is_extra_credit):
-       result['extra_credit_days'] = randint(1,60)
-        
-    start = datetime.strptime('1/1/2010', '%d/%m/%Y')
-    end = datetime.strptime('1/1/2014', '%d/%m/%Y')
-    supply_date = random_date(start, end)
+
+    pay_date = None
+
     if (is_neardue):
+        #due date is somewhere between today and the next 6 days
         start = date.today()
         end = start + timedelta(days=randint(0,6))
         due_date = random_date(start, end)
+    elif (is_late):
+        # duedate is in the past 
+        due_date = date.today() - timedelta(days=result['late_days'])
+        pay_date = due_date + timedelta(days=result['late_days'])
     else:
-        due_date = regulation_due_date(supply_date) + \
-            timedelta(days=result['extra_credit_days'])
-    pay_date = due_date + timedelta(days=result['late_days']-result['extra_credit_days'])
+        # due date is at least 7 days in the future
+        start = date.today() + timedelta(days=7)
+        end = start + timedelta(days=randint(0,100))
+        due_date = random_date(start, end)
     
+    legal_credit_days = randint(1,30) #assuming here that 30 are always legal credit
+    supply_date = random_date(due_date - timedelta(days=legal_credit_days), due_date)
+
     result['payment'] = Payment.objects.create(
         corporation=corporation,
         owner=user,
@@ -220,11 +224,10 @@ class UsersProfileTests(TestCase):
     
    
     def test_near_due_payments(self):
-        payments_count = 10
+        payments_count = 1000
         neardue_list = []
         for i in xrange(0,payments_count):
             is_late = choice([True, False])
-            is_extra_credit = choice([True, False])
             if is_late:
                 is_neardue = False
             else:
@@ -234,7 +237,6 @@ class UsersProfileTests(TestCase):
             p_detail = generate_payment(user, 
                 corporation, 
                 is_late=is_late, 
-                is_extra_credit=is_extra_credit,
                 is_neardue=is_neardue
             )
             p_detail['payment'].save()
@@ -242,6 +244,7 @@ class UsersProfileTests(TestCase):
             if user == self.user_1 and is_neardue:
                 p = p_detail['payment']
                 neardue_list.append(p)
+        print "user 1 payments", self.user_1.payment_set.all()
         print "neardue_list", neardue_list
         neardue_payments = self.user_1.get_profile().neardue_payments
         print "neardue_payments", neardue_payments
@@ -250,7 +253,7 @@ class UsersProfileTests(TestCase):
     def test_overdue_payments(self):
         
         self.assertTrue(Payment.objects.count() == 0)
-        payments_count_1 = 10
+        payments_count_1 = 1000
         overdue_payments_count = len(self.user_1.get_profile().overdue_payments)
         self.assertEqual(overdue_payments_count, 0)
         overdue_payments_count = len(self.user_2.get_profile().overdue_payments)
@@ -258,7 +261,6 @@ class UsersProfileTests(TestCase):
         late_list = []
         for i in xrange(0,payments_count_1):
             is_late = choice([True, False])
-            is_extra_credit = choice([True, False])
             if is_late:
                 is_neardue = False
             else:
@@ -268,7 +270,6 @@ class UsersProfileTests(TestCase):
             p_detail = generate_payment(user, 
                 corporation, 
                 is_late=is_late, 
-                is_extra_credit=is_extra_credit,
                 is_neardue=is_neardue
             )
             p_detail['payment'].save()
@@ -276,6 +277,7 @@ class UsersProfileTests(TestCase):
             if user == self.user_1 and is_late:
                 p = p_detail['payment']
                 late_list.append(p)
+        self.maxDiff = None
         self.assertEqual(late_list, self.user_1.get_profile().overdue_payments)
                 
                                 
@@ -287,7 +289,6 @@ class UsersProfileTests(TestCase):
         self.assertEqual(self.user_2.get_profile().payments_count, 0)
         for i in xrange(0,payments_count_1):
             is_late = choice([True, False])
-            is_extra_credit = choice([True, False])
             if is_late:
                 is_neardue = False
             else:
@@ -295,7 +296,6 @@ class UsersProfileTests(TestCase):
             self.payments_detail.append(generate_payment(self.user_1, 
                 self.corporation_1, 
                 is_late=is_late, 
-                is_extra_credit=is_extra_credit,
                 is_neardue=is_neardue)
             )
                                          
@@ -311,7 +311,6 @@ class UsersProfileTests(TestCase):
             self.payments_detail.append(generate_payment(self.user_2, 
                 self.corporation_1, 
                 is_late=is_late, 
-                is_extra_credit=choice([True, False]),
                 is_neardue=is_neardue)
             )
         self.assertEqual(self.user_1.get_profile().payments_count, payments_count_1)
