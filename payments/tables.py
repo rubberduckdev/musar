@@ -7,7 +7,7 @@ from payments.models import Payment, Corporation
 class CorporationTable(tables.Table):
     days_late_average = columns.TemplateColumn('{{ record.lateness_average }}')
     days_credit_average = columns.TemplateColumn('{{ record.credit_average }}')
-    name = columns.LinkColumn('compare_corporation', args=[A('name')], verbose_name='corporation') #, kwargs={'corporation': A('name')}
+    name = columns.LinkColumn('compare_corporation', kwargs={'corporation': A('name')}, verbose_name='corporation') #, kwargs={'corporation': A('name')}
 #                               , 
 #         kwargs={'corporation': A('name')})
 #     name = columns.TemplateColumn(

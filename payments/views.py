@@ -96,11 +96,7 @@ def settings(a_request, username):
    
 @login_required 
 def compare_view(a_request, corporation):
-    corporation_get = a_request.GET['corporation']
-    corporation_post = a_request.POST.get('corporation')
-    assert False
-    c = get_object_or_404(Corporation, name__eq=corporation)
-    assert False
+    c = get_object_or_404(Corporation, name=corporation)
     user = User.objects.get(username=a_request.user.username)
     profile = user.get_profile()
     assert c != None
