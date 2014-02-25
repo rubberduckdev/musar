@@ -284,7 +284,7 @@ class UsersProfileTests(TestCase):
         
     def test_user_payments_count(self):
          
-        payments_count_1 = 10
+        payments_count_1 = 1000
         self.assertEqual(self.user_1.get_profile().payments_count, 0)
         self.assertEqual(self.user_2.get_profile().payments_count, 0)
         for i in xrange(0,payments_count_1):

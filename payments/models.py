@@ -6,6 +6,7 @@ from django.db import models
 # from django.utils.datetime_safe import datetime, date
 from django.utils.translation import ugettext as _
 from django.db.models.signals import post_save
+from django.template.defaultfilters import slugify
 import json
 
 MAX_LEGAL_CREDIT_DAYS=45
@@ -40,8 +41,13 @@ class Corporation(models.Model):
     )
 
     name = models.CharField(max_length=200, unique=True)
+    slug_name = models.CharField(max_length=200, unique=True, null=True, blank=True)
     url = models.URLField(null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        self.slug_name = slugify(self.name)
+        super(Corporation, self).save(*args, **kwargs)
 
 
     def __unicode__(self):

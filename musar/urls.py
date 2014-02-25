@@ -78,7 +78,7 @@ urlpatterns = patterns('',
         MyCorporationsList.as_view(),
         name='my_corporations'),
                        
-    url(r'^user/(?P<corporation>\w+)/compare/$',
+    url(r'^user/(?P<corporation>[\w-]+)/compare/$',
         compare_view,
         name='compare_corporation'),                       
 

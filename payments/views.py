@@ -96,7 +96,7 @@ def settings(a_request, username):
    
 @login_required 
 def compare_view(a_request, corporation):
-    c = get_object_or_404(Corporation, name=corporation)
+    c = get_object_or_404(Corporation, slug_name=corporation)
     user = User.objects.get(username=a_request.user.username)
     profile = user.get_profile()
     assert c != None
