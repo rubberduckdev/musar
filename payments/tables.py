@@ -33,7 +33,7 @@ class CorporationTable(tables.Table):
         attrs = {"class": "table"}   
         
 class PaymentsTable(tables.Table):
-    days_late = columns.TemplateColumn('{{ record.lateness_days }}')
+    days_late = columns.TemplateColumn('{{ record.extra_credit_days }}')
     days_credit = columns.TemplateColumn('{{ record.credit_days }}')
     class Meta:
         model = Payment

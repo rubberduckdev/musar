@@ -106,7 +106,7 @@ def compare_view(a_request, corporation):
     	'user_profile': profile}
     )
 
-
+# login_required
 class MyCorporationsList(SingleTableView):
 	model = Corporation
 	template_name = 'payments/my_corporations.html'
@@ -123,28 +123,6 @@ class MyCorporationsList(SingleTableView):
 		return super(MyCorporationsList, self).dispatch(*args, **kwargs)
 
 	
-@login_required   
-def my_corporations_view(a_request, username):
-	if a_request.method == 'POST':
-		corporation = a_request.POST.get('corporation')
-		return HttpResponseRedirect(reverse_lazy('payments',
-        		kwargs={'username': username, 'corporation': corporation})
-    )
-
-	try:
-		# consider taking username from the request
-		user = User.objects.get(username = username)
-		profile = user.get_profile()
-		corporation = Corporation.objects.all()[0]
-		payments_count = user.get_profile().payments_count_by_corporation(corporation)
-		return render(a_request, 'payments/my_corporations.html', 
-			{'username': username, 'corporation': corporation, 'payments_count': payments_count})
-	except User.DoesNotExist:
-		return HttpResponse("Invalid username")
-	except Corporation.DoesNotExist:
-		return HttpResponse("Corporation not found")
-
-
 # login_required
 class PaymentsList(SingleTableView):
     model = Payment
@@ -167,6 +145,7 @@ class PaymentsList(SingleTableView):
 
 
 def load_payments_from_file_view(a_request, username):
+    # TODO skip empty lines in input file
     if a_request.method == 'POST':
         payments = []
         form = LoadFileForm(a_request.POST, a_request.FILES)

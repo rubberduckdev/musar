@@ -61,14 +61,14 @@ class Corporation(models.Model):
     def total_late_days(self):
         days = 0
         for payment in self.payment_set.all():
-            days += payment.lateness_days
+            days += payment.extra_credit_days
         return days
 #         return self.payment_set.filter()
     
     @property
     def late_payments_count(self):
         late_payments_set = [payment for payment in self.payment_set.all() \
-            if payment.lateness_days > 0]
+            if payment.extra_credit_days > 0]
         return len(late_payments_set)
     
     @property
@@ -173,7 +173,7 @@ class Payment(models.Model):
     )
 
     def __unicode__(self):
-        return self.title + " " + self.owner.username + " " + self.corporation.name + " " + str(self.lateness_days) + " " + str(self.supply_date) +  " " + str(self.due_date) + " " + str(self.pay_date) 
+        return self.title + " " + self.owner.username + " " + self.corporation.name + " " + str(self.extra_credit_days) + " " + str(self.supply_date) +  " " + str(self.due_date) + " " + str(self.pay_date) 
 
     def get_absolute_url(self):
         return reverse('add_payments', kwargs={'pk': self.pk})
@@ -193,7 +193,8 @@ class Payment(models.Model):
         )
 
     @property
-    def lateness_days(self):
+    def extra_credit_days(self):
+        # TODO: make sure date is not in future
         effective_due_date = min(self.due_date, 
             regulation_due_date(self.supply_date)
         )
@@ -229,7 +230,7 @@ class UserProfile(models.Model):
     def overdue_payments(self):
         late_payments = [
             payment for payment in self.user.payment_set.all() 
-                if payment.lateness_days > 0 
+                if payment.extra_credit_days > 0 
         ]
         return late_payments
          
@@ -263,13 +264,13 @@ class UserProfile(models.Model):
     def total_late_days(self):
         days = 0
         for payment in self.user.payment_set.all():
-            days += payment.lateness_days
+            days += payment.extra_credit_days
         return days
     
     @property
     def late_payments_count(self):
         late_payments = [payment for payment in self.user.payment_set.all() \
-            if payment.lateness_days > 0]
+            if payment.extra_credit_days > 0]
         return len(late_payments)
     
     @property
