@@ -281,7 +281,7 @@ class PaymentCreate(CreateView):
 
 def search(a_request):
     # name__icontains=a_request.POST['search_term'])
-    search_term = a_request.GET['search_term'.encode('utf-8')]
+    search_term = a_request.GET['search_term'.encode('utf-8')].strip()
     return HttpResponseRedirect(
         reverse_lazy('corporation', kwargs={'corporation': search_term})
         # a_request.POST.get('corporation_name')
