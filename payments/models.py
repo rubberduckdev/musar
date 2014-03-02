@@ -1,10 +1,12 @@
-from datetime import timedelta
+from datetime import timedelta, date, datetime
 
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.utils.datetime_safe import datetime
+# from django.utils.datetime_safe import datetime, date
 from django.utils.translation import ugettext as _
+from django.db.models.signals import post_save
+from django.template.defaultfilters import slugify
 import json
 
 MAX_LEGAL_CREDIT_DAYS=45
@@ -39,15 +41,55 @@ class Corporation(models.Model):
     )
 
     name = models.CharField(max_length=200, unique=True)
+    slug_name = models.CharField(max_length=200, unique=True, null=True, blank=True)
     url = models.URLField(null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        self.slug_name = slugify(self.name)
+        super(Corporation, self).save(*args, **kwargs)
 
-    def __repr__(self):
-        return json.dumps(self.__dict__, default=dthandler)
 
     def __unicode__(self):
         return self.name
-
+    
+    @property
+    def payments_count(self):
+        return self.payment_set.count()
+    
+    @property
+    def total_late_days(self):
+        days = 0
+        for payment in self.payment_set.all():
+            days += payment.extra_credit_days
+        return days
+#         return self.payment_set.filter()
+    
+    @property
+    def late_payments_count(self):
+        late_payments_set = [payment for payment in self.payment_set.all() \
+            if payment.extra_credit_days > 0]
+        return len(late_payments_set)
+    
+    @property
+    def lateness_average(self):
+        if self.payments_count == 0:
+            return 0
+        return self.total_late_days/self.payments_count
+    
+    @property
+    def total_credit_days(self):
+        days = 0
+        for payment in self.payment_set.all():
+            days += payment.credit_days
+        return days
+        
+    @property
+    def credit_average(self):
+        if self.payments_count == 0:
+            return 0
+        return self.total_credit_days/self.payments_count
+        
 
 class PaymentType(object):
     """indication if this is payment to or payment by"""
@@ -59,6 +101,19 @@ class PaymentType(object):
         (OUT, 'Out'),
     )
 
+def get_max_legal_credit_days(supply_date):
+    # TODO: implement the real computation which is based on supply_date shotef+
+    return MAX_LEGAL_CREDIT_DAYS
+
+def regulation_due_date(supply_date):
+    """ Due date might be latter than regulations premits. In such case,
+        the latest date regulation allow is returned. 
+    """
+    max_legal_credit_date = (
+        supply_date + timedelta(days=get_max_legal_credit_days(supply_date)))
+        
+    return max_legal_credit_date
+
 
 class Payment(models.Model):
     """ Holds the details of a pass or future payment
@@ -67,7 +122,7 @@ class Payment(models.Model):
 
     corporation = models.ForeignKey(
         Corporation,
-        related_name='corporation_payments',
+#         related_name='corporation_payments',
         verbose_name=_('Corporation ID'),
         # help_text=_('The paying corporation'),
     )
@@ -78,7 +133,7 @@ class Payment(models.Model):
     )
     owner = models.ForeignKey(
         User,
-        related_name='payments',
+#         related_name='payments',
         verbose_name=_('Created By'),
         # help_text=_('Who is getting this payment'),
     )
@@ -104,7 +159,7 @@ class Payment(models.Model):
         # help_text=_('The date the goods or services where delivared'),
     )
     order_date = models.DateField(
-        default=datetime.now,
+        default=date.today(),
         verbose_name=_('Order Date'),
         # help_text=_('The date the supply was ordered'),
         null=True,
@@ -117,11 +172,16 @@ class Payment(models.Model):
         blank=True,
     )
 
-    def __repr__(self):
-        return json.dumps(self.__dict__, default=dthandler)
-
     def __unicode__(self):
-        return self.title
+        return ' '.join((
+            self.title,
+            self.owner.username,
+            self.corporation.name,
+            str(self.extra_credit_days),
+            str(self.supply_date),
+            str(self.due_date),
+            str(self.pay_date)
+        ))
 
     def get_absolute_url(self):
         return reverse('add_payments', kwargs={'pk': self.pk})
@@ -140,16 +200,107 @@ class Payment(models.Model):
             supply_date=supply_date
         )
 
-    def lateness_days(self):
-        max_legal_credit_date = self.supply_date + timedelta(days=MAX_LEGAL_CREDIT_DAYS)
-        legal_due_date = min(self.due_date, max_legal_credit_date)
-        return max((self.pay_date - legal_due_date).days, 0)
-
+    @property
+    def extra_credit_days(self):
+        # TODO: make sure date is not in future
+        effective_due_date = min(self.due_date, 
+            regulation_due_date(self.supply_date)
+        )
+        if (self.pay_date == None):
+            # ToDo: add test for this if
+            return max(0, (date.today() - effective_due_date).days)
+        return max((self.pay_date - effective_due_date).days, 0)
+    
+    @property
     def credit_days(self):
-        return None
-        return (self.pay_date - self.supply_date).days
-        #return min(0, (self.pay_date - self.supply_date).days)
+        if (self.pay_date == None):
+            # ToDo: add test for this if
+            return max(0, (date.today() - self.supply_date).days)
+        return max(0, (self.pay_date - self.supply_date).days)
 
     class Meta:
         verbose_name = _("Payment")
         verbose_name_plural = _("Payments")
+        
+
+class UserProfile(models.Model):  
+    user = models.OneToOneField(User) 
+    neardue_days = models.DecimalField(default=6, decimal_places=0, max_digits=2) 
+
+    def __str__(self):  
+          return "%s's profile" % self.user  
+
+    def create_user_profile(sender, instance, created, **kwargs):  
+        if created:  
+           profile, created = UserProfile.objects.get_or_create(user=instance)
+    
+    @property
+    def overdue_payments(self):
+        late_payments = [
+            payment for payment in self.user.payment_set.all() 
+                if payment.extra_credit_days > 0 
+        ]
+        return late_payments
+         
+    @property
+    def neardue_payments(self):
+        neardue_payments = []
+        for payment in self.user.payment_set.all():
+            days_till_pay = (payment.due_date - date.today()).days
+            print "days", days_till_pay
+            if days_till_pay >= 0 and days_till_pay <= 6:
+                neardue_payments.append(payment)
+            
+#         neardue_payments = Payment.objects.filter(due_date__range=(startdate, enddate))
+#         neardue_payments = Payment.objects.filter(due_date__range=(startdate, enddate))
+#                                                   ,
+#             due_date__range=[startdate, enddate])
+ 
+        return neardue_payments
+
+    @property       
+    def payments_count_by_corporation(self, corporation):
+        payments_list = [payment for payment in self.user.payment_set.all() \
+            if payment.corporation == corporation]
+        return len(payments_list)
+           
+    @property
+    def payments_count(self):
+        return self.user.payment_set.count()
+    
+    @property
+    def total_late_days(self):
+        days = 0
+        for payment in self.user.payment_set.all():
+            days += payment.extra_credit_days
+        return days
+    
+    @property
+    def late_payments_count(self):
+        late_payments = [payment for payment in self.user.payment_set.all() \
+            if payment.extra_credit_days > 0]
+        return len(late_payments)
+    
+    @property
+    def lateness_average(self):
+        if self.payments_count > 0:
+            return self.total_late_days/self.payments_count
+        return 0
+    
+    @property
+    def total_credit_days(self):
+        days = 0
+        for payment in self.user.payment_set.all():
+            days += payment.credit_days
+        return days
+        
+    @property
+    def credit_average(self):
+        if self.payments_count > 0:
+            return self.total_credit_days/self.payments_count
+        return 0
+
+    post_save.connect(create_user_profile, sender=User) 
+        
+        
+

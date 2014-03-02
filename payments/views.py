@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse_lazy
 from django.http import request
 from django.shortcuts import render_to_response
@@ -13,13 +14,12 @@ from django.views.generic.edit import CreateView, FormView
 from django_tables2 import SingleTableView
 from payments.forms import AddPaymentForm, LoadFileForm
 from payments.models import Corporation, Payment
-from payments.tables import PaymentsTable, PaymentsPartialTable
-#from django.core.files.uploadedfile import SimpleUploadedFile
+from payments.tables import PaymentsTable, PaymentsPartialTable, CorporationTable
 from django.template import RequestContext
-#import csv
 import logging
-#from payments.csv_models import PaymentCsvModel
+from payments.csv_models import PaymentCsvModel
 from django.http import HttpResponseNotFound
+from django.utils.translation import ugettext as _
 
 
 # Get an instance of a logger
@@ -52,17 +52,16 @@ class HomeView(SingleTableView):
 
     def __init__(self, user=None, *args, **kwargs):
         super(HomeView, self).__init__(*args, **kwargs)
-        self._user = user
+        self.user = user
 
     def get_context_data(self, **kwargs):
         """ Adds tables of late and near due payments to the context
         """
-        # filter overview payments
         context = super(HomeView, self).get_context_data(**kwargs)
-        late_payments_data = Payment.objects.filter(
-            due_date__lt=datetime.today)
-        context['table'] = PaymentsPartialTable(late_payments_data)
-        # filter payments due in 6 days
+		# add overview payments
+        context['table'] = \
+        	PaymentsPartialTable(self.request.user.get_profile().overdue_payments)
+        # add payments due in 6 days
         startdate = datetime.today()
         enddate = startdate + timedelta(days=6)
         neardue_payments_data = Payment.objects.filter(
@@ -72,7 +71,7 @@ class HomeView(SingleTableView):
         return context
 
     def get_queryset(self):
-        return self.request.user.payments.all()
+        return self.request.user.payment_set.all()
 
     #  This is how you decorate class see:
     #  https://docs.djangoproject.com/en/1.5/topics/class-based-views/intro/
@@ -83,41 +82,81 @@ class HomeView(SingleTableView):
 
 @login_required
 def statistics(a_request, username):
-    return render(a_request, 'payments/statistics.html', {'username': username})
-
+	try:
+		# consider taking username from the request
+		user = User.objects.get(username = username)
+		profile = user.get_profile()
+		assert user != None
+		assert profile != None
+		return render(a_request, 'payments/statistics.html', 
+			{'user': user, 'user_profile': profile}
+		)
+	except User.DoesNotExist:
+		return HttpResponse("Invalid username")
 
 @login_required
 def settings(a_request, username):
     return render(a_request, 'payments/settings.html', {'username': username})
+   
+@login_required 
+def compare_view(a_request, corporation):
+    c = get_object_or_404(Corporation, slug_name=corporation)
+    user = User.objects.get(username=a_request.user.username)
+    profile = user.get_profile()
+    assert c != None
+    return render(a_request, 'payments/compare_corporation.html', 
+    	{'user': user, 
+    	'corporation': c, 
+    	'user_profile': profile}
+    )
 
+# login_required
+class MyCorporationsList(SingleTableView):
+	model = Corporation
+	template_name = 'payments/my_corporations.html'
+	table_class = CorporationTable
+	
+	def get_queryset(self):
+		# filter for current user
+		return Corporation.objects.all()
+
+    # This is how you decorate class see:
+    # https://docs.djangoproject.com/en/1.5/topics/class-based-views/intro/
+	@method_decorator(login_required)
+	def dispatch(self, *args, **kwargs):
+		return super(MyCorporationsList, self).dispatch(*args, **kwargs)
+
+
+# login NOT required
+class CorporationsList(SingleTableView):
+    model = Corporation
+    template_name = 'payments/table.html'
+    table_class = CorporationTable
+    
+    def get_queryset(self):
+        return Corporation.objects.all()
+    
+    def get_context_data(self, **kwargs):
+        """ Add title
+        """
+        context = super(CorporationsList, self).get_context_data(**kwargs)
+        context['title'] = "Corporations List"
+        return context
+	
 
 # login_required
 class PaymentsList(SingleTableView):
     model = Payment
     template_name = 'payments/payments.html'
     table_class = PaymentsTable
-
+    
     def get_queryset(self):
-        return Payment.objects.filter(owner=self.request.user)
-
-    # This is how you decorate class see:
-    # https://docs.djangoproject.com/en/1.5/topics/class-based-views/intro/
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(PaymentsList, self).dispatch(*args, **kwargs)
-
-
-class AddPaymentsList(SingleTableView):
-    model = Payment
-    template_name = 'payments/payments.html'
-    table_class = PaymentsTable
-
-    def __init__(self, *args, **kwargs):
-        super(AddPaymentsList, self).__init__(*args, **kwargs)
-        self.csv_payments = kwargs['payments']
-
-    def get_queryset(self):
-        return self.csv_payments
+        if self.request.method == 'POST':
+            corporation = self.request.POST.get('corporation')
+            payments_list = [payment for payment in self.request.user.payment_set.all() if payment.coporation__eq(corporation)]
+        else:
+            payments_list = [payment for payment in self.request.user.payment_set.all()]
+    	return payments_list
 
     # This is how you decorate class see:
     # https://docs.djangoproject.com/en/1.5/topics/class-based-views/intro/
@@ -127,14 +166,15 @@ class AddPaymentsList(SingleTableView):
 
 
 def load_payments_from_file_view(a_request, username):
+    # TODO skip empty lines in input file
     if a_request.method == 'POST':
         payments = []
         form = LoadFileForm(a_request.POST, a_request.FILES)
         if form.is_valid():
-            csv_file = a_request.FILES['file']
-#           payments = PaymentCsvModel.import_from_file(csv_file)
-            csv_text = csv_file.read()
-            return render(
+        	csv_file = a_request.FILES.get('file')
+        	csv_text = ''.join(csv_file.readlines())
+         	payments = PaymentCsvModel.import_from_file(csv_file)
+         	return render(
                 a_request,
                 'payments/add_payments.html',
                 {'table': PaymentsTable(payments),
@@ -151,97 +191,77 @@ def load_payments_from_file_view(a_request, username):
             {'form': form},
             context_instance=RequestContext(a_request),
         )
-#       return HttpResponse('<h1>Page was found</h1>')
-#       return render_to_response(
-#           'payments/loadpaymentsfile_form.html', {'username': username})
-
 
 def save_payments_list_view(a_request, username):
-    if a_request.method != 'POST':
-        return HttpResponseNotFound('<h1>No Page Here</h1>')
+	
+	if a_request.method != 'POST':
+		return HttpResponseNotFound('<h1>No Page Here</h1>')
+	
+ 	csv_data = a_request.POST.get('csv_text')
+#  	assert False
+# 	stripped_csv_data = (item.strip() for item in csv_data.split())
+ 	payments = PaymentCsvModel.import_data(csv_data.split('\r\n'))
+	for csv_model in payments:
+		corporation = Corporation.objects.get(cid=csv_model.corporation)
+		assert corporation != None
+		
+		p = Payment(
+			corporation=corporation, 
+    		owner=a_request.user,
+    		amount=csv_model.amount,
+    		title=csv_model.title,
+    		due_date=csv_model.due_date,
+    		supply_date=csv_model.supply_date,
+    		order_date=csv_model.order_date,
+    		pay_date=csv_model.pay_date
+		)
+		
+		p.save()
+	return HttpResponseRedirect(reverse_lazy('payments',
+        kwargs={'username': username})
+    )
 
-    payments = a_request.POST.get('csv_text')
-    assert False
-    return HttpResponseRedirect(
-        reverse_lazy('payments', kwargs={'username': username}))
-#   if a_request.method == 'POST':
-#       pass
-#       payments = a_request.session.get('payments')
-#       for item in payments.items():
-#           p = Payement(corporation=p.corporation,
-#               owner=a_request.user,
-#               amount=p.amount,
-#               title=p.title,
-#               due_date=p.due_date,
-#               supply_date=p.supply_date,
-#               order_date=p.order_date,
-#               pay_date=p.pay_date
-#           )
-#           p.save()
 
-
-class LoadPaymentsFileView(FormView):
-    form_class = LoadFileForm
-    template_name = 'payments/loadpaymentsfile_form.html'
-
-    def get_form_kwargs(self):
-        kwargs = super(LoadPaymentsFileView, self).get_form_kwargs()
-        kwargs['user'] = self.request.user
+# class LoadPaymentsFileView(FormView):
+#     form_class = LoadFileForm
+#     template_name = 'payments/loadpaymentsfile_form.html'
+# 
+#     def get_form_kwargs(self):
+#         kwargs = super(LoadPaymentsFileView, self).get_form_kwargs()
+#         kwargs['user'] = self.request.user
+# #         assert False
+#         return kwargs
+# 
+#     def form_valid(self, form):
+#         payments = form.get_payments()
+#         self.request.session['payments'] = payments
+#         logger.info(self.request.session.get('payments'))
+#         username = form.user
+#         self.request.session['username'] = username
 #         assert False
-        return kwargs
-
-    def form_valid(self, form):
-        payments = form.get_payments()
-        self.request.session['payments'] = payments
-        logger.info(self.request.session.get('payments'))
-        username = form.user
-        self.request.session['username'] = username
-        assert False
-        return HttpResponseRedirect(
-            reverse_lazy('file', kwargs={'username': username,
-                                         'payments': payments}))
-
-    # XXX TODO *args, **kwargs might cause problems?
-    def post(self, *args, **kwargs):
-        form = LoadPaymentsFileForm(request.POST)
-        if form.is_valid():
-            payments = form.get_payments()
-            self.request.session['payments'] = payments
-            logger.info(self.request.session.get('payments'))
-            username = form.user
-            self.request.session['username'] = username
-            assert False
-        return HttpResponseRedirect(
-            reverse_lazy('file', kwargs={'username': username,
-                                         'payments': payments}))
-
-    # This is how you decorate class see:
-    # https://docs.djangoproject.com/en/1.5/topics/class-based-views/intro/
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(LoadPaymentsFileView, self).dispatch(*args, **kwargs)
-
-
-class PaymentsFileView(TemplateView):
-    #model = Payment
-    model = Payment
-    template_name = 'payments/file.html'
-#     template_name = 'payments/payments.html'
-#     template_name = 'payments/file.html'
-#     table_class = PaymentsTable
-
-    def get_context_data(self, **kwargs):
-        # Call the base implementation first to get a context
-        context = super(PaymentsFileView, self).get_context_data(**kwargs)
-        context['payments_list'] = self.request.session.get('payments')
-#         assert False
-        return context
-
-    # This is how you decorate class see:
-    # https://docs.djangoproject.com/en/1.5/topics/class-based-views/intro/
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(PaymentsFileView, self).dispatch(*args, **kwargs)
+#         return HttpResponseRedirect(
+#             reverse_lazy('file', kwargs={'username': username,
+#                                          'payments': payments}))
+# 
+#     # XXX TODO *args, **kwargs might cause problems?
+#     def post(self, *args, **kwargs):
+#         form = LoadPaymentsFileForm(request.POST)
+#         if form.is_valid():
+#             payments = form.get_payments()
+#             self.request.session['payments'] = payments
+#             logger.info(self.request.session.get('payments'))
+#             username = form.user
+#             self.request.session['username'] = username
+#             assert False
+#         return HttpResponseRedirect(
+#             reverse_lazy('file', kwargs={'username': username,
+#                                          'payments': payments}))
+# 
+#     # This is how you decorate class see:
+#     # https://docs.djangoproject.com/en/1.5/topics/class-based-views/intro/
+#     @method_decorator(login_required)
+#     def dispatch(self, *args, **kwargs):
+#         return super(LoadPaymentsFileView, self).dispatch(*args, **kwargs)
 
 
 # login_required
@@ -259,6 +279,7 @@ class PaymentCreate(CreateView):
     )
 
     def form_valid(self, form):
+    	# set the hidden field to current user
         form.instance.created_by = self.request.user
         form.instance.owner = self.request.user
         return super(PaymentCreate, self).form_valid(form)
@@ -280,24 +301,14 @@ class PaymentCreate(CreateView):
 
 
 def search(a_request):
-    # name__icontains=a_request.POST['search_term'])
-    search_term = a_request.GET['search_term'.encode('utf-8')]
+    search_term = a_request.GET['search_term'.encode('utf-8')].strip()
+    # TODO check if match exist and redirect only if one match found
     return HttpResponseRedirect(
         reverse_lazy('corporation', kwargs={'corporation': search_term})
-        # a_request.POST.get('corporation_name')
     )
 
 
 def corporation_detail(a_request, corporation):
     obj = get_object_or_404(Corporation, name__icontains=corporation)
+    assert obj != None
     return render(a_request, 'payments/company.html', {'corporation': obj})
-
-
-# class CorporationView(DetailView):
-#     model = Corporation
-#     template_name = 'payments/company.html'
-#     # context_object_name = 'corporation'
-#
-#     def get_object(self, *args, **kwargs):
-#         return get_object_or_404(Corporation,
-#             name__icontains=kwargs['pk'])

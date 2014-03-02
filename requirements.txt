@@ -4,3 +4,4 @@ pyreadline==2.0
 six==1.4.1
 sqlparse==0.1.10
 django-tables2==0.14.0
+django-import-export==0.2.1
