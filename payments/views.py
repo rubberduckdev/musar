@@ -19,6 +19,7 @@ from django.template import RequestContext
 import logging
 from payments.csv_models import PaymentCsvModel
 from django.http import HttpResponseNotFound
+from django.utils.translation import ugettext as _
 
 
 # Get an instance of a logger
@@ -122,7 +123,24 @@ class MyCorporationsList(SingleTableView):
 	def dispatch(self, *args, **kwargs):
 		return super(MyCorporationsList, self).dispatch(*args, **kwargs)
 
+
+# login NOT required
+class CorporationsList(SingleTableView):
+    model = Corporation
+    template_name = 'payments/table.html'
+    table_class = CorporationTable
+    
+    def get_queryset(self):
+        return Corporation.objects.all()
+    
+    def get_context_data(self, **kwargs):
+        """ Add title
+        """
+        context = super(CorporationsList, self).get_context_data(**kwargs)
+        context['title'] = "Corporations List"
+        return context
 	
+
 # login_required
 class PaymentsList(SingleTableView):
     model = Payment
@@ -280,11 +298,10 @@ class PaymentCreate(CreateView):
 
 
 def search(a_request):
-    # name__icontains=a_request.POST['search_term'])
     search_term = a_request.GET['search_term'.encode('utf-8')].strip()
+    # TODO check if match exist and redirect only if one match found
     return HttpResponseRedirect(
         reverse_lazy('corporation', kwargs={'corporation': search_term})
-        # a_request.POST.get('corporation_name')
     )
 
 

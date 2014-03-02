@@ -7,7 +7,7 @@ from payments.views import (
     index, HomeView, PaymentCreate, statistics,
     settings, register, search, after_login, PaymentsList, corporation_detail,
     load_payments_from_file_view, save_payments_list_view, MyCorporationsList,
-    compare_view
+    compare_view, CorporationsList
 )
 
 
@@ -78,6 +78,10 @@ urlpatterns = patterns('',
         MyCorporationsList.as_view(),
         name='my_corporations'),
                        
+    url(r'^corporations/$',
+        CorporationsList.as_view(),
+        name='corporations_list'),
+
     url(r'^user/(?P<corporation>[\w-]+)/compare/$',
         compare_view,
         name='compare_corporation'),                       
